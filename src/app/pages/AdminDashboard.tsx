@@ -78,17 +78,17 @@ export default function AdminDashboard() {
     e.preventDefault();
     setAddingUser(true);
     try {
-      // First, check if user already exists in auth
-      const { data: existingUsers, error: checkError } = await supabase
+      // First, check if user already exists in auth by trying to check profiles
+      const { data: existingProfile, error: checkError } = await supabase
         .from("profiles")
         .select("*")
         .eq("email", formData.email)
-        .single();
+        .maybeSingle();
 
-      let userId = existingUsers?.id;
+      let userId = existingProfile?.id;
 
       // Only create Auth user if doesn't exist
-      if (!existingUsers) {
+      if (!existingProfile) {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -108,6 +108,7 @@ export default function AdminDashboard() {
               name: formData.name,
               email: formData.email,
               role: formData.role,
+              password: formData.password,
               created_at: new Date().toISOString(),
             },
           ]);
@@ -134,11 +135,13 @@ export default function AdminDashboard() {
         }
 
         // Reset form and close modal
+        const userRole = formData.role.charAt(0).toUpperCase() + formData.role.slice(1);
         setFormData({ name: "", email: "", password: "", role: "student" });
         setShowAddModal(false);
-        alert(`${formData.role.charAt(0).toUpperCase() + formData.role.slice(1)} added successfully!`);
+        alert(`${userRole} added successfully!`);
       }
     } catch (error: any) {
+      console.error("Error:", error);
       alert(`Error adding user: ${error.message}`);
     } finally {
       setAddingUser(false);

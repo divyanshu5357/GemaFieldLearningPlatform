@@ -6,6 +6,9 @@ import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import SignupPage from "./pages/SignupPage";
+import TestBuilder from "./pages/TestBuilder";
+import StudentTestPage from "./pages/StudentTestPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +27,10 @@ export const router = createBrowserRouter([
   {
     path: "/dashboard/student",
     Component: StudentDashboard,
+  },
+  {
+    path: "/dashboard/student/test/:testId",
+    Component: StudentTestPage,
   },
   {
     path: "/dashboard/student/courses",
@@ -46,6 +53,10 @@ export const router = createBrowserRouter([
     Component: TeacherDashboard,
   },
   {
+    path: "/dashboard/teacher/test-builder/:courseId",
+    Component: TestBuilder,
+  },
+  {
     path: "/dashboard/teacher/courses",
     element: <PlaceholderPage role="teacher" title="Manage Courses" />,
   },
@@ -64,6 +75,10 @@ export const router = createBrowserRouter([
   {
     path: "/dashboard/admin",
     Component: AdminDashboard,
+  },
+  {
+    path: "/dashboard/admin/analytics",
+    Component: AnalyticsPage,
   },
   {
     path: "/dashboard/admin/users",
