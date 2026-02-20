@@ -2,13 +2,15 @@ import { ActivityChart } from "../components/ActivityChart";
 import { GlassCard } from "../components/GlassCard";
 import { DashboardLayout } from "../components/DashboardLayout";
 import { StatCard } from "../components/StatCard";
-import { BookOpen, CheckCircle, Clock, TrendingUp } from "lucide-react";
+import { BookOpen, CheckCircle, Clock, TrendingUp, Play } from "lucide-react";
 import { CourseCard } from "../components/CourseCard";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 export default function StudentDashboard() {
   const [courses, setCourses] = useState<any[]>([]);
+  const [tests, setTests] = useState<any[]>([]);
   const [stats, setStats] = useState({
     coursesEnrolled: 0,
     averageScore: 0,
@@ -17,6 +19,7 @@ export default function StudentDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -50,6 +53,16 @@ export default function StudentDashboard() {
           .from("results")
           .select("score")
           .eq("student_id", user.id);
+
+        // Fetch all tests
+        const { data: testsData } = await supabase
+          .from("tests")
+          .select("id, title, course_id, courses(title)")
+          .limit(6);
+
+        if (testsData) {
+          setTests(testsData);
+        }
 
         if (resultsData && resultsData.length > 0) {
           const avgScore = Math.round(resultsData.reduce((a: number, b: any) => a + b.score, 0) / resultsData.length);
@@ -93,6 +106,31 @@ export default function StudentDashboard() {
             {courses.map((course) => (
                <CourseCard key={course.id} {...course} />
             ))}
+          </div>
+
+          <h2 className="text-lg font-semibold text-white mt-8">Available Tests</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {tests.length > 0 ? (
+              tests.map((test) => (
+                <GlassCard key={test.id} className="p-4 flex items-between justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-white">{test.title}</h3>
+                    <p className="text-sm text-gray-400 mt-1">
+                      {test.courses?.title || "Course"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => navigate(`/dashboard/student/test/${test.id}`)}
+                    className="ml-4 flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors whitespace-nowrap"
+                  >
+                    <Play className="h-4 w-4" />
+                    Start Test
+                  </button>
+                </GlassCard>
+              ))
+            ) : (
+              <p className="text-gray-400 text-sm">No tests available yet</p>
+            )}
           </div>
           
           <h2 className="text-lg font-semibold text-white mt-8">Recent Activity</h2>
