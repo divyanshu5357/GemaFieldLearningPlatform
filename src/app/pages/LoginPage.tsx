@@ -1,122 +1,288 @@
-import { GlassCard } from "../components/GlassCard";
+  import { GlassCard } from "../components/GlassCard";
 import { useNavigate } from "react-router";
 import { useState } from "react";
-import { Lock, Mail, User } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (authError || !authData.user) {
-      setError(authError?.message || "Login failed");
-      setLoading(false);
-      return;
-    }
-    // Fetch user role from profiles table
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", authData.user.id)
-      .single();
-    if (profileError || !profile) {
-      setError(profileError?.message || "Profile not found");
-      setLoading(false);
-      return;
-    }
-    // Redirect based on role
-    if (profile.role === "student") {
-  navigate("/dashboard/student");
-} else if (profile.role === "teacher") {
-  navigate("/dashboard/teacher");
-} else if (profile.role === "admin") {
-  navigate("/dashboard/admin");
-} else {
-      setError("Unknown role");
-    }
-    setLoading(false);
-  };
+  const navigate = useNavigate();
 
-  return (
-    <div className="flex h-screen w-full items-center justify-center bg-[#0b1736] p-4 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-[#0b1736] to-[#0b1736] pointer-events-none" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-      <GlassCard className="w-full max-w-md p-8 relative z-10 backdrop-blur-xl border-white/10 shadow-2xl shadow-blue-900/20">
-        <div className="text-center mb-8">
-          <div className="mx-auto h-12 w-12 rounded-xl bg-blue-600/20 flex items-center justify-center text-blue-500 mb-4 ring-1 ring-blue-500/30">
-            <User className="h-6 w-6" />
-          </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">Welcome back</h2>
-          <p className="mt-2 text-sm text-gray-400">Enter your credentials to access your account</p>
-        </div>
 
-        <form className="space-y-6" onSubmit={handleLogin}>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
-              <input
-                type="email"
-                className="w-full rounded-lg bg-white/5 border border-white/10 py-2.5 pl-10 pr-4 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors outline-none"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-          </div>
+  const handleLogin = async (e: React.FormEvent) => {
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-300">Password</label>
-              <a href="#" className="text-sm text-blue-400 hover:text-blue-300">Forgot password?</a>
-            </div>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
-              <input
-                type="password"
-                className="w-full rounded-lg bg-white/5 border border-white/10 py-2.5 pl-10 pr-4 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors outline-none"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/20"
-            disabled={loading}
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-          {error && <div className="text-red-400 text-sm mt-2 text-center">{error}</div>}
-        </form>
+    const { data: authData, error: authError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-        <div className="mt-6 text-center">
-          <span className="text-gray-400 text-sm">Student? </span>
-          <a
-            href="/signup"
-            className="text-blue-400 hover:text-blue-300 text-sm font-medium underline"
-          >
-            Sign up here
-          </a>
-        </div>
-      </GlassCard>
-    </div>
-  );
+    if (authError || !authData.user) {
+      setError(authError?.message || "Login failed");
+      setLoading(false);
+      return;
+    }
+
+    const { data: profile } =
+      await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", authData.user.id)
+        .single();
+
+    if (profile?.role === "student")
+      navigate("/dashboard/student");
+
+    else if (profile?.role === "teacher")
+      navigate("/dashboard/teacher");
+
+    else if (profile?.role === "admin")
+      navigate("/dashboard/admin");
+
+    setLoading(false);
+
+  };
+
+
+
+  return (
+
+<div className="h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] to-[#020617]">
+
+<GlassCard className="
+w-[900px]
+h-[500px]
+flex
+overflow-hidden
+rounded-2xl
+border border-cyan-400/30
+shadow-[0_0_60px_rgba(0,255,255,0.25)]
+">
+
+{/* LEFT SIDE */}
+
+<div className="
+w-1/2
+px-16
+flex
+flex-col
+justify-center
+bg-[#0f172a]
+">
+
+<h2 className="text-3xl font-semibold text-white mb-10">
+Login
+</h2>
+
+
+
+<form onSubmit={handleLogin} className="space-y-6">
+
+
+{/* EMAIL */}
+
+<div className="relative">
+
+<Mail className="absolute right-3 top-3 text-gray-400"/>
+
+<input
+
+type="email"
+
+placeholder="Username"
+
+value={email}
+
+onChange={(e)=>setEmail(e.target.value)}
+
+className="
+w-full
+bg-white/10
+border border-white/20
+rounded-md
+px-4
+py-3
+text-white
+focus:border-cyan-400
+focus:ring-2
+focus:ring-cyan-400/40
+outline-none
+transition
+"
+
+/>
+
+</div>
+
+
+
+{/* PASSWORD */}
+
+<div className="relative">
+
+<Lock className="absolute right-3 top-3 text-gray-400"/>
+
+<input
+
+type="password"
+
+placeholder="Password"
+
+value={password}
+
+onChange={(e)=>setPassword(e.target.value)}
+
+className="
+w-full
+bg-white/10
+border border-white/20
+rounded-md
+px-4
+py-3
+text-white
+focus:border-cyan-400
+focus:ring-2
+focus:ring-cyan-400/40
+outline-none
+transition
+"
+
+/>
+
+</div>
+
+
+
+{/* BUTTON */}
+
+<button
+
+type="submit"
+
+disabled={loading}
+
+className="
+w-full
+mt-4
+py-3
+rounded-full
+bg-gradient-to-r
+from-cyan-500
+to-light blue-500
+text-white
+font-medium
+hover:scale-[1.03]
+hover:shadow-lg
+transition
+"
+
+>
+
+{loading ? "Signing in..." : "Login"}
+
+</button>
+
+
+{error &&
+
+<p className="text-red-400 text-sm">
+
+{error}
+
+</p>
+
 }
+
+
+</form>
+
+
+<p className="mt-8 text-gray-400 text-sm">
+
+Don't have an account?
+
+<a href="/signup" className="text-cyan-400 ml-2 hover:underline">
+
+Sign Up
+
+</a>
+
+</p>
+
+
+</div>
+
+
+
+
+{/* RIGHT SIDE */}
+
+
+
+<div className="w-1/2 relative">
+
+{/* gradient */}
+
+<div className="
+absolute
+inset-0
+bg-gradient-to-br
+from-cyan-500
+to-blue-600
+"/>
+
+
+
+{/* diagonal cut */}
+
+<div className="
+absolute
+inset-0
+bg-[#0f172a]
+[clip-path:polygon(0_0,55%_0,35%_100%,0_100%)]
+"/>
+
+
+
+{/* text */}
+
+<div className="
+absolute
+right-16
+top-1/2
+translate-y-[-50%]
+text-white
+text-4xl
+font-bold
+leading-tight
+">
+
+WELCOME
+<br/>
+BACK!
+
+</div>
+
+
+</div>
+
+
+
+</GlassCard>
+
+</div>
+
+);
+
+}
+ 
