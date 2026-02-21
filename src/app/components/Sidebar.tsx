@@ -1,5 +1,6 @@
-import { cn } from "@/lib/utils";
-import { Link, useLocation } from "react-router";
+import { cn } from "../../lib/utils";
+import { Link, useLocation, useNavigate } from "react-router";
+import { supabase } from "../../lib/supabase";
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -12,6 +13,7 @@ import {
   Upload,
   UserCog
 } from "lucide-react";
+import { useState } from "react";
 
 interface SidebarProps {
   role: "student" | "teacher" | "admin";
@@ -19,6 +21,21 @@ interface SidebarProps {
 
 export function Sidebar({ role }: SidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+      navigate("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      alert("Failed to sign out");
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   const commonLinks = [
     { name: "Settings", icon: Settings, path: `/dashboard/${role}/settings` },
@@ -78,9 +95,13 @@ export function Sidebar({ role }: SidebarProps) {
       </div>
 
       <div className="border-t border-white/10 p-4">
-        <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
+        <button 
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-50"
+        >
           <LogOut className="h-5 w-5" />
-          Sign Out
+          {isSigningOut ? "Signing Out..." : "Sign Out"}
         </button>
       </div>
     </div>

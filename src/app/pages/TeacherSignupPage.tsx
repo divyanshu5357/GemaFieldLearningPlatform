@@ -58,21 +58,34 @@ export default function TeacherSignupPage() {
       }
 
       // 2. Create teacher profile in database
-      const { error: profileError } = await supabase.from("profiles").insert([
-        {
-          id: authData.user.id,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || null,
-          role: "teacher",
-          bio: formData.bio || null,
-          is_active: true,
-        },
-      ]);
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert([
+          {
+            id: authData.user.id,
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone || null,
+            role: "teacher",
+            bio: formData.bio || null,
+            is_active: true,
+          },
+        ])
+        .select(); // Add select to return data
 
       if (profileError) {
         console.error("Profile error:", profileError);
-        throw new Error(`Failed to create teacher profile: ${profileError.message}`);
+        // If RLS is blocking, try to get the profile that might have been created by trigger
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", authData.user.id)
+          .single();
+        
+        if (!existingProfile) {
+          throw new Error(`Failed to create teacher profile: ${profileError.message}`);
+        }
+        console.warn("Profile already exists, continuing...");
       }
 
       // Success - redirect to teacher dashboard
@@ -87,13 +100,13 @@ export default function TeacherSignupPage() {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-[#0b1736] p-4 relative overflow-hidden">
+    <div className="min-h-screen w-full bg-[#0b1736] p-4 relative overflow-hidden flex items-center justify-center">
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-purple-900/20 via-[#0b1736] to-[#0b1736] pointer-events-none" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
 
-      <GlassCard className="w-full max-w-md p-8 relative z-10 backdrop-blur-xl border-white/10 shadow-2xl shadow-purple-900/20">
+      <GlassCard className="w-full max-w-md p-8 relative z-10 backdrop-blur-xl border-white/10 shadow-2xl shadow-purple-900/20 my-8">
         {/* Back Button */}
         <button
           onClick={() => navigate("/signup")}

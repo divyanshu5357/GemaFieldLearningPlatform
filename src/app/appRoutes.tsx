@@ -13,6 +13,9 @@ import TestEditor from "./pages/TestEditor";
 import StudentTestPage from "./pages/StudentTestPage";
 import StudentProgressPage from "./pages/StudentProgressPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
+import StudentCoursesListPage from "./pages/StudentCoursesListPage";
+import StudentCoursePage from "./pages/StudentCoursePage";
+import LessonPage from "./pages/LessonPage";
 
 export const router = createBrowserRouter([
   {
@@ -49,12 +52,20 @@ export const router = createBrowserRouter([
     Component: StudentProgressPage,
   },
   {
-    path: "/dashboard/student/courses",
-    element: <PlaceholderPage role="student" title="My Courses" />,
+    path: "/courses",
+    Component: StudentCoursesListPage,
   },
   {
-    path: "/dashboard/student/progress",
-    element: <PlaceholderPage role="student" title="My Progress" />,
+    path: "/dashboard/student/courses",
+    Component: StudentCoursesListPage,
+  },
+  {
+    path: "/courses/:courseId",
+    Component: StudentCoursePage,
+  },
+  {
+    path: "/courses/:courseId/lessons/:lessonId",
+    Component: LessonPage,
   },
   {
     path: "/dashboard/student/mentors",

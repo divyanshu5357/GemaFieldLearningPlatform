@@ -1,18 +1,31 @@
-import { GlassCard } from "@/app/components/GlassCard";
+import { GlassCard } from "./GlassCard";
 import { CheckCircle2, Clock, PlayCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface CourseCardProps {
+  id?: string;
   title: string;
-  instructor: string;
+  instructor?: string;
   progress: number;
   image: string;
   totalLessons: number;
   completedLessons: number;
+  onClick?: () => void;
 }
 
-export function CourseCard({ title, instructor, progress, image, totalLessons, completedLessons }: CourseCardProps) {
+export function CourseCard({ id, title, instructor, progress, image, totalLessons, completedLessons, onClick }: CourseCardProps) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else if (id) {
+      navigate(`/courses/${id}`);
+    }
+  };
+
   return (
-    <GlassCard className="flex flex-col overflow-hidden group hover:border-blue-500/30 transition-all duration-300">
+    <GlassCard className="flex flex-col overflow-hidden group hover:border-blue-500/30 transition-all duration-300 cursor-pointer" onClick={handleClick}>
       <div className="relative h-40 w-full overflow-hidden">
         <img 
           src={image} 
@@ -41,7 +54,7 @@ export function CourseCard({ title, instructor, progress, image, totalLessons, c
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
             <div 
-              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500" 
+              className="h-full rounded-full bg-linear-to-r from-blue-500 to-purple-500 transition-all duration-500" 
               style={{ width: `${progress}%` }} 
             />
           </div>
