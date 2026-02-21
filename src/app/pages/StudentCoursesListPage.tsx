@@ -166,7 +166,7 @@ export default function StudentCoursesListPage() {
             >
               {/* Thumbnail */}
               {course.thumbnail_url ? (
-                <div className="h-40 overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20">
+                <div className="h-40 overflow-hidden bg-linear-to-br from-blue-500/20 to-purple-500/20">
                   <img
                     src={course.thumbnail_url}
                     alt={course.title}
@@ -174,7 +174,7 @@ export default function StudentCoursesListPage() {
                   />
                 </div>
               ) : (
-                <div className="h-40 bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                <div className="h-40 bg-linear-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
                   <BookOpen className="h-12 w-12 text-blue-400/30" />
                 </div>
               )}

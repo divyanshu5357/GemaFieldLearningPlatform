@@ -1,5 +1,5 @@
-import { GlassCard } from "@/app/components/GlassCard";
-import { Navbar } from "@/app/components/Navbar";
+import { GlassCard } from "../components/GlassCard";
+import { Navbar } from "../components/Navbar";
 import { BarChart2, BrainCircuit, Users } from "lucide-react";
 import { Link } from "react-router";
 
@@ -9,8 +9,8 @@ export default function LandingPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative flex min-h-screen flex-col items-center justify-center pt-24 px-8 text-center bg-gradient-to-b from-[#0b1736] to-transparent via-blue-900/10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-[#0b1736] to-[#0b1736] pointer-events-none" />
+      <section className="relative flex min-h-screen flex-col items-center justify-center pt-24 px-8 text-center bg-linear-to-b from-[#0b1736] to-transparent via-blue-900/10">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-blue-900/20 via-[#0b1736] to-[#0b1736] pointer-events-none" />
         
         <GlassCard className="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-1.5 text-sm font-medium text-blue-400">
           <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
@@ -18,7 +18,7 @@ export default function LandingPage() {
         </GlassCard>
 
         <h1 className="relative z-10 mx-auto max-w-4xl text-5xl font-bold leading-tight tracking-tight sm:text-7xl">
-          <span className="bg-gradient-to-r from-white via-blue-100 to-gray-400 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-white via-blue-100 to-gray-400 bg-clip-text text-transparent">
             Smart Mentor Learning Platform
           </span>
         </h1>

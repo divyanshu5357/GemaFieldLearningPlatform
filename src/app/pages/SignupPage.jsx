@@ -21,7 +21,7 @@ export const SignupPage = () => {
     setLoading(true);
 
     try {
-      // ✅ Only Supabase Auth signup
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -41,7 +41,6 @@ export const SignupPage = () => {
         throw error;
       }
 
-      // ✅ Profile will be auto-created by SQL trigger
       navigate('/dashboard/student');
 
     } catch (err) {
@@ -54,14 +53,12 @@ export const SignupPage = () => {
   return (
     <div className="flex h-screen w-full items-center justify-center bg-[#0b1736] p-4 relative overflow-hidden">
 
-      {/* Background */}
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-[#0b1736] to-[#0b1736] pointer-events-none" />
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-blue-900/20 via-[#0b1736] to-[#0b1736] pointer-events-none" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
 
       <GlassCard className="w-full max-w-md p-8 relative z-10 backdrop-blur-xl border-white/10 shadow-2xl shadow-blue-900/20">
 
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="mx-auto h-12 w-12 rounded-xl bg-blue-600/20 flex items-center justify-center text-blue-500 mb-4 ring-1 ring-blue-500/30">
             <User className="h-6 w-6" />
@@ -74,7 +71,6 @@ export const SignupPage = () => {
           </p>
         </div>
 
-        {/* Error */}
         {error && (
           <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
             <p className="text-red-400 text-sm">{error}</p>
@@ -83,7 +79,7 @@ export const SignupPage = () => {
 
         <form onSubmit={handleSignup} className="space-y-6">
 
-          {/* Name */}
+
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">
               Full Name
@@ -101,7 +97,7 @@ export const SignupPage = () => {
             </div>
           </div>
 
-          {/* Email */}
+
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">
               Email
@@ -119,7 +115,7 @@ export const SignupPage = () => {
             </div>
           </div>
 
-          {/* Password */}
+
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">
               Password
@@ -137,7 +133,6 @@ export const SignupPage = () => {
             </div>
           </div>
 
-          {/* Phone */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">
               Phone Number
@@ -155,7 +150,6 @@ export const SignupPage = () => {
             </div>
           </div>
 
-          {/* Button */}
           <button
             type="submit"
             disabled={loading}
@@ -165,7 +159,6 @@ export const SignupPage = () => {
           </button>
         </form>
 
-        {/* Footer */}
         <div className="mt-6 text-center">
           <span className="text-gray-400 text-sm">
             Already have an account?

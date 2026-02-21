@@ -16,6 +16,12 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import StudentCoursesListPage from "./pages/StudentCoursesListPage";
 import StudentCoursePage from "./pages/StudentCoursePage";
 import LessonPage from "./pages/LessonPage";
+import TeacherCoursePage from "./pages/TeacherCoursePage";
+import TeacherCoursesPage from "./pages/TeacherCoursesPage";
+import TeacherStudentsPage from "./pages/TeacherStudentsPage";
+import SettingsPage from "./pages/SettingsPage";
+import ContentUploadHub from "./pages/ContentUploadHub";
+import TeacherContentUpload from "./pages/TeacherContentUpload";
 
 export const router = createBrowserRouter([
   {
@@ -73,11 +79,15 @@ export const router = createBrowserRouter([
   },
   {
     path: "/dashboard/student/settings",
-    element: <PlaceholderPage role="student" title="Settings" />,
+    element: <SettingsPage role="student" />,
   },
   {
     path: "/dashboard/teacher",
     Component: TeacherDashboard,
+  },
+  {
+    path: "/dashboard/teacher/course/:courseId",
+    Component: TeacherCoursePage,
   },
   {
     path: "/dashboard/teacher/test-builder/:courseId",
@@ -89,19 +99,19 @@ export const router = createBrowserRouter([
   },
   {
     path: "/dashboard/teacher/courses",
-    element: <PlaceholderPage role="teacher" title="Manage Courses" />,
+    Component: TeacherCoursesPage,
   },
   {
     path: "/dashboard/teacher/upload",
-    element: <PlaceholderPage role="teacher" title="Upload Content" />,
+    Component: TeacherContentUpload,
   },
   {
     path: "/dashboard/teacher/students",
-    element: <PlaceholderPage role="teacher" title="Student List" />,
+    Component: TeacherStudentsPage,
   },
   {
     path: "/dashboard/teacher/settings",
-    element: <PlaceholderPage role="teacher" title="Settings" />,
+    element: <SettingsPage role="teacher" />,
   },
   {
     path: "/dashboard/admin",
@@ -117,10 +127,10 @@ export const router = createBrowserRouter([
   },
   {
     path: "/dashboard/admin/analytics",
-    element: <PlaceholderPage role="admin" title="Platform Analytics" />,
+    Component: AnalyticsPage,
   },
   {
     path: "/dashboard/admin/settings",
-    element: <PlaceholderPage role="admin" title="System Settings" />,
+    element: <SettingsPage role="admin" />,
   },
 ]);
