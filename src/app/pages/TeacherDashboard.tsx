@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function TeacherDashboard() {
   const [courses, setCourses] = useState<any[]>([]);
+  const [courseTests, setCourseTests] = useState<{ [key: string]: any[] }>({});
   const [loading, setLoading] = useState(true);
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
@@ -36,6 +37,21 @@ export default function TeacherDashboard() {
 
         if (!coursesError && coursesData) {
           setCourses(coursesData);
+
+          // Fetch tests for each course
+          const testsMap: { [key: string]: any[] } = {};
+          for (const course of coursesData) {
+            const { data: testsData } = await supabase
+              .from("tests")
+              .select("*")
+              .eq("course_id", course.id)
+              .eq("teacher_id", user.id);
+
+            if (testsData) {
+              testsMap[course.id] = testsData;
+            }
+          }
+          setCourseTests(testsMap);
         }
       } catch (error) {
         console.error("Error fetching teacher data:", error);
@@ -137,6 +153,27 @@ export default function TeacherDashboard() {
                 {course.video_url && (
                   <p className="text-xs text-blue-400 mb-4 truncate">📹 {course.video_url}</p>
                 )}
+
+                {/* Tests Section */}
+                {courseTests[course.id] && courseTests[course.id].length > 0 && (
+                  <div className="mb-4 p-3 bg-white/5 rounded-lg">
+                    <p className="text-xs font-semibold text-gray-300 mb-2">Tests ({courseTests[course.id].length})</p>
+                    <div className="space-y-1">
+                      {courseTests[course.id].map((test) => (
+                        <div key={test.id} className="flex items-center justify-between text-xs">
+                          <span className="text-gray-400 truncate">{test.title}</span>
+                          <button
+                            onClick={() => navigate(`/dashboard/teacher/test-editor/${test.id}`)}
+                            className="text-blue-400 hover:text-blue-300"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-2 mt-4">
                   <button
                     onClick={() => navigate(`/dashboard/teacher/test-builder/${course.id}`)}

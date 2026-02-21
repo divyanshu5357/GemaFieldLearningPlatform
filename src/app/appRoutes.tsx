@@ -5,9 +5,13 @@ import StudentDashboard from "./pages/StudentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import PlaceholderPage from "./pages/PlaceholderPage";
-import SignupPage from "./pages/SignupPage";
+import SignupSelectPage from "./pages/SignupSelectPage";
+import StudentSignupPage from "./pages/StudentSignupPage";
+import TeacherSignupPage from "./pages/TeacherSignupPage";
 import TestBuilder from "./pages/TestBuilder";
+import TestEditor from "./pages/TestEditor";
 import StudentTestPage from "./pages/StudentTestPage";
+import StudentProgressPage from "./pages/StudentProgressPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 
 export const router = createBrowserRouter([
@@ -16,8 +20,16 @@ export const router = createBrowserRouter([
     Component: LandingPage,
   },
   {
-    path :"/signup",
-    Component : SignupPage,
+    path: "/signup",
+    Component: SignupSelectPage,
+  },
+  {
+    path: "/signup/student",
+    Component: StudentSignupPage,
+  },
+  {
+    path: "/signup/teacher",
+    Component: TeacherSignupPage,
   },
 
   {
@@ -31,6 +43,10 @@ export const router = createBrowserRouter([
   {
     path: "/dashboard/student/test/:testId",
     Component: StudentTestPage,
+  },
+  {
+    path: "/dashboard/student/progress",
+    Component: StudentProgressPage,
   },
   {
     path: "/dashboard/student/courses",
@@ -55,6 +71,10 @@ export const router = createBrowserRouter([
   {
     path: "/dashboard/teacher/test-builder/:courseId",
     Component: TestBuilder,
+  },
+  {
+    path: "/dashboard/teacher/test-editor/:testId",
+    Component: TestEditor,
   },
   {
     path: "/dashboard/teacher/courses",
