@@ -1,9 +1,10 @@
 import { DashboardLayout } from "../components/DashboardLayout";
 import { GlassCard } from "../components/GlassCard";
 import { StatCard } from "../components/StatCard";
-import { CheckCircle2, MoreVertical, Search, Shield, User, UserMinus, UserPlus } from "lucide-react";
+import { CheckCircle2, MoreVertical, Search, Shield, User, UserMinus, UserPlus, BarChart3 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState<any[]>([]);
@@ -15,6 +16,7 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -109,7 +111,6 @@ export default function AdminDashboard() {
               email: formData.email,
               role: formData.role,
               password: formData.password,
-              created_at: new Date().toISOString(),
             },
           ]);
 
@@ -161,6 +162,13 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-white">User Management</h2>
           <div className="flex gap-3">
+            <button
+              onClick={() => navigate("/dashboard/admin/analytics")}
+              className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500 transition-colors shadow-lg shadow-purple-600/20"
+            >
+              <BarChart3 className="h-4 w-4" />
+              View Analytics
+            </button>
             <GlassCard className="flex items-center px-3 py-2 text-sm text-gray-400 bg-white/5 border-white/10 rounded-lg w-64">
               <Search className="h-4 w-4 mr-2" />
               <input 
@@ -264,7 +272,7 @@ export default function AdminDashboard() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="John Doe"
+                  placeholder="Enter your name"
                   className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
                   required
                 />
@@ -290,7 +298,7 @@ export default function AdminDashboard() {
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
                   required
                 />

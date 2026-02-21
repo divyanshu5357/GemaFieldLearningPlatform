@@ -28,19 +28,18 @@ export function Sidebar({ role }: SidebarProps) {
     student: [
       { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard/student" },
       { name: "My Courses", icon: BookOpen, path: "/dashboard/student/courses" },
-      { name: "Progress", icon: LineChart, path: "/dashboard/student/progress" },
+      { name: "My Progress", icon: LineChart, path: "/dashboard/student/progress" },
       { name: "Mentorship", icon: Users, path: "/dashboard/student/mentors" },
     ],
     teacher: [
       { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard/teacher" },
-      { name: "My Courses", icon: BookOpen, path: "/dashboard/teacher/courses" },
-      { name: "Upload Course", icon: Upload, path: "/dashboard/teacher/upload" },
-      { name: "Students", icon: GraduationCap, path: "/dashboard/teacher/students" },
+      { name: "Manage Courses", icon: BookOpen, path: "/dashboard/teacher/courses" },
+      { name: "All Students", icon: GraduationCap, path: "/dashboard/teacher/students" },
     ],
     admin: [
       { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard/admin" },
       { name: "User Management", icon: UserCog, path: "/dashboard/admin/users" },
-      { name: "Platform Analytics", icon: PieChart, path: "/dashboard/admin/analytics" },
+      { name: "Analytics", icon: PieChart, path: "/dashboard/admin/analytics" },
     ]
   };
 

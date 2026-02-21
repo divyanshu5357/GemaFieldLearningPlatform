@@ -99,7 +99,12 @@ export default function StudentDashboard() {
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-white">Continue Learning</h2>
-            <a href="#" className="text-sm font-medium text-blue-400 hover:text-blue-300">View All</a>
+            <button
+              onClick={() => navigate("/dashboard/student/progress")}
+              className="text-sm font-medium text-blue-400 hover:text-blue-300"
+            >
+              View Progress
+            </button>
           </div>
           
           <div className="grid gap-6 sm:grid-cols-2">
