@@ -86,7 +86,7 @@ export default function StudentDashboard() {
   return (
     <DashboardLayout role="student" title="Student Dashboard">
       {/* Stats Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Courses Enrolled" value={String(stats.coursesEnrolled)} icon={BookOpen} color="text-blue-500" />
         <StatCard title="Average Score" value={`${stats.averageScore}%`} icon={TrendingUp} color="text-green-500" />
         <StatCard title="Hours Spent" value={`${stats.hoursSpent}h`} icon={Clock} color="text-purple-500" />
@@ -94,7 +94,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <div className="mt-6 sm:mt-8 grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-3">
         {/* Course Progress Section */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
@@ -107,26 +107,26 @@ export default function StudentDashboard() {
             </button>
           </div>
           
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-3 sm:gap-6 grid-cols-1 sm:grid-cols-2">
             {courses.map((course) => (
                <CourseCard key={course.id} {...course} />
             ))}
           </div>
 
           <h2 className="text-lg font-semibold text-white mt-8">Available Tests</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
             {tests.length > 0 ? (
               tests.map((test) => (
-                <GlassCard key={test.id} className="p-4 flex items-between justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-white">{test.title}</h3>
-                    <p className="text-sm text-gray-400 mt-1">
+                <GlassCard key={test.id} className="p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-white text-sm sm:text-base truncate">{test.title}</h3>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-1">
                       {test.courses?.title || "Course"}
                     </p>
                   </div>
                   <button
                     onClick={() => navigate(`/dashboard/student/test/${test.id}`)}
-                    className="ml-4 flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors whitespace-nowrap"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-500 transition-colors whitespace-nowrap shrink-0"
                   >
                     <Play className="h-4 w-4" />
                     Start Test
@@ -175,7 +175,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Sidebar Widgets */}
-        <div className="space-y-8">
+        <div className="space-y-4 sm:space-y-8">
           <ActivityChart />
 
           <GlassCard className="p-6">

@@ -57,11 +57,11 @@ export default function LoginPage() {
 
   return (
 
-<div className="h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] to-[#020617]">
+<div className="h-screen flex items-center justify-center bg-linear-to-br from-[#0f172a] to-[#020617]">
 
 <GlassCard className="
-w-[900px]
-h-[500px]
+w-225
+h-125
 flex
 overflow-hidden
 rounded-2xl
@@ -176,7 +176,7 @@ w-full
 mt-4
 py-3
 rounded-full
-bg-gradient-to-r
+bg-linear-to-r
 from-cyan-500
 to-light blue-500
 text-white
@@ -236,7 +236,7 @@ Sign Up
 <div className="
 absolute
 inset-0
-bg-gradient-to-br
+bg-linear-to-br
 from-cyan-500
 to-blue-600
 "/>

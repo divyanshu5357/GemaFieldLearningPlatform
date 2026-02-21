@@ -5,7 +5,9 @@ import { DashboardLayout } from "../components/DashboardLayout";
 import { GlassCard } from "../components/GlassCard";
 import VideoPlayer from "../components/VideoPlayer";
 import LessonList from "../components/LessonList";
-import { ArrowLeft } from "lucide-react";
+import AIRevisionCard from "../components/AIRevisionCard";
+import { ChatPanelContent } from "../components/ChatPanelContent";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Course {
@@ -31,6 +33,22 @@ export default function StudentCoursePage() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [studentId, setStudentId] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(true);
+  const [chatWidth, setChatWidth] = useState(200); // Small default size
+
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) setStudentId(user.id);
+      } catch (err) {
+        console.error("Error fetching student:", err);
+      }
+    };
+
+    fetchStudentData();
+  }, []);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -120,44 +138,117 @@ export default function StudentCoursePage() {
           <p className="text-gray-300 text-lg font-semibold">No lessons yet. Check back soon!</p>
         </GlassCard>
       ) : (
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Video Player - Takes 2/3 on large screens */}
-          <div className="lg:col-span-2">
-            <GlassCard className="p-8 border-t-2 border-blue-500 bg-linear-to-b from-blue-500/5 to-transparent">
-              {selectedLesson ? (
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 drop-shadow-md">
-                    <span className="w-1.5 h-6 bg-linear-to-b from-blue-400 to-blue-600 rounded-full"></span>
-                    {selectedLesson.title}
-                  </h2>
-                  <VideoPlayer
-                    youtubeUrl={selectedLesson.youtube_url}
-                    title={selectedLesson.title}
+        <div className="flex gap-4 w-full">
+          {/* Left Side - Video, Revision, and Lessons */}
+          <div className="flex-1 flex flex-col gap-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
+            {/* Video Player Card */}
+            <div className="shrink-0">
+              <GlassCard className="p-8 border-t-2 border-blue-500 bg-linear-to-b from-blue-500/5 to-transparent">
+                {selectedLesson ? (
+                  <div>
+                    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 drop-shadow-md">
+                      <span className="w-1.5 h-6 bg-linear-to-b from-blue-400 to-blue-600 rounded-full"></span>
+                      {selectedLesson.title}
+                    </h2>
+                    <VideoPlayer
+                      youtubeUrl={selectedLesson.youtube_url}
+                      title={selectedLesson.title}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-300 py-16">
+                    <p className="text-lg font-semibold">Select a lesson to watch</p>
+                  </div>
+                )}
+              </GlassCard>
+            </div>
+
+            {/* Revision Card - Full Width, Scrollable */}
+            {selectedLesson && (
+              <div className="shrink-0">
+                <GlassCard className="p-6 border-t-2 border-purple-500 bg-linear-to-b from-purple-500/5 to-transparent max-h-96 overflow-y-auto">
+                  <AIRevisionCard
+                    lessonTitle={selectedLesson.title}
+                    description={course.description}
+                    transcript={selectedLesson.youtube_url}
                   />
-                </div>
-              ) : (
-                <div className="text-center text-gray-300 py-16">
-                  <p className="text-lg font-semibold">Select a lesson to watch</p>
-                </div>
-              )}
-            </GlassCard>
+                </GlassCard>
+              </div>
+            )}
+
+            {/* Lesson List */}
+            <div className="shrink-0">
+              <GlassCard className="p-8 border-t-2 border-purple-500 max-h-96 overflow-y-auto bg-linear-to-b from-purple-500/5 to-transparent">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 drop-shadow-md">
+                  <span className="w-2 h-2 bg-linear-to-r from-purple-400 to-purple-600 rounded-full"></span>
+                  Lessons Playlist
+                </h3>
+                <LessonList
+                  lessons={lessons}
+                  selectedLessonId={selectedLessonId || undefined}
+                  onSelectLesson={setSelectedLessonId}
+                  onDeleteLesson={async () => {}} // Students don't delete lessons
+                  isTeacher={false}
+                />
+              </GlassCard>
+            </div>
           </div>
 
-          {/* Lesson List - Takes 1/3 on large screens */}
-          <div className="lg:col-span-1">
-            <GlassCard className="p-8 border-t-2 border-purple-500 max-h-96 overflow-y-auto bg-linear-to-b from-purple-500/5 to-transparent">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 drop-shadow-md">
-                <span className="w-2 h-2 bg-linear-to-r from-purple-400 to-purple-600 rounded-full"></span>
-                Lessons Playlist
-              </h3>
-              <LessonList
-                lessons={lessons}
-                selectedLessonId={selectedLessonId || undefined}
-                onSelectLesson={setSelectedLessonId}
-                onDeleteLesson={async () => {}} // Students don't delete lessons
-                isTeacher={false}
-              />
-            </GlassCard>
+          {/* Right Side - Chat Panel with Resize */}
+          <div 
+            className="shrink-0 bg-linear-to-br from-slate-900/95 to-slate-800/95 rounded-2xl border border-white/10 backdrop-blur-xl flex flex-col overflow-hidden relative min-h-96"
+            style={{ width: `${chatWidth}px` }}
+          >
+            {/* Chat Header */}
+            <div className="p-3 border-b border-white/10 flex items-center justify-between bg-white/5">
+              <h2 className="text-white font-semibold flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
+                <span className="text-lg">💬</span>
+                <span>AI Mentor</span>
+              </h2>
+              <button
+                onClick={() => setChatOpen(!chatOpen)}
+                className="text-gray-400 hover:text-white transition-colors p-1"
+                title={chatOpen ? "Minimize" : "Expand"}
+              >
+                {chatOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </button>
+            </div>
+
+            {/* Chat Component - Takes full remaining space */}
+            {chatOpen && selectedLesson && (
+              <div className="flex-1 overflow-hidden">
+                <div className="h-full">
+                  <ChatPanelContent 
+                    lesson={selectedLesson} 
+                    studentId={studentId} 
+                    courseTitle={course.title} 
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Resize Handle */}
+            <div
+              className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500/50 bg-transparent group transition-colors"
+              onMouseDown={(e) => {
+                const startX = e.clientX;
+                const startWidth = chatWidth;
+
+                const handleMouseMove = (moveEvent: MouseEvent) => {
+                  const diff = moveEvent.clientX - startX;
+                  const newWidth = Math.max(150, Math.min(600, startWidth - diff));
+                  setChatWidth(newWidth);
+                };
+
+                const handleMouseUp = () => {
+                  document.removeEventListener("mousemove", handleMouseMove);
+                  document.removeEventListener("mouseup", handleMouseUp);
+                };
+
+                document.addEventListener("mousemove", handleMouseMove);
+                document.addEventListener("mouseup", handleMouseUp);
+              }}
+            />
           </div>
         </div>
       )}

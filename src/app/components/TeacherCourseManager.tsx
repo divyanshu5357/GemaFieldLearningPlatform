@@ -213,11 +213,11 @@ export default function TeacherCourseManager() {
   return (
     <div className="space-y-6">
       {/* Header with Create Course Button */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">My Courses</h2>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold text-white">My Courses</h2>
         <button
           onClick={() => setShowCourseForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-blue-500/50"
         >
           <Plus className="h-5 w-5" />
           New Course
@@ -226,11 +226,11 @@ export default function TeacherCourseManager() {
 
       {/* Course List */}
       {courses.length === 0 ? (
-        <GlassCard className="p-12 text-center">
-          <p className="text-gray-400 mb-4">You haven't created any courses yet.</p>
+        <GlassCard className="p-12 text-center border-2 border-dashed border-blue-400/30">
+          <p className="text-gray-200 mb-4 text-lg font-semibold">You haven't created any courses yet.</p>
           <button
             onClick={() => setShowCourseForm(true)}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg"
           >
             <Plus className="h-5 w-5" />
             Create Your First Course
@@ -245,29 +245,28 @@ export default function TeacherCourseManager() {
             return (
               <div key={course.id}>
                 {/* Course Header */}
-                <GlassCard className="p-6">
+                <GlassCard className={`p-6 border-2 transition-all duration-200 ${isExpanded ? 'border-blue-500 bg-blue-600/10' : 'border-gray-600/50 hover:border-blue-400/60'}`}>
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() =>
                         setExpandedCourseId(isExpanded ? null : course.id)
                       }
-                      className="flex items-center gap-4 flex-1 text-left"
+                      className="flex items-center gap-4 flex-1 text-left hover:opacity-80 transition-opacity"
                     >
                       {isExpanded ? (
-                        <ChevronUp className="h-5 w-5 text-blue-400 shrink-0" />
+                        <ChevronUp className="h-6 w-6 text-blue-400 shrink-0 font-bold" />
                       ) : (
-                        <ChevronDown className="h-5 w-5 text-gray-400 shrink-0" />
+                        <ChevronDown className="h-6 w-6 text-blue-300 shrink-0" />
                       )}
-                      <div>
-                        <h3 className="text-lg font-bold text-white">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-white leading-tight">
                           {course.title}
                         </h3>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-base text-gray-200 mt-2 leading-relaxed">
                           {course.description}
                         </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {courseLessons.length} lesson
-                          {courseLessons.length !== 1 ? "s" : ""}
+                        <p className="text-sm text-blue-300 font-semibold mt-2">
+                          📚 {courseLessons.length} lesson{courseLessons.length !== 1 ? "s" : ""}
                         </p>
                       </div>
                     </button>
@@ -279,7 +278,7 @@ export default function TeacherCourseManager() {
                           setSelectedCourseId(course.id);
                           setShowLessonForm(true);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium transition-colors ml-4 shrink-0"
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-purple-500/50 ml-4 shrink-0"
                       >
                         <Plus className="h-4 w-4" />
                         Add Lesson
@@ -290,10 +289,10 @@ export default function TeacherCourseManager() {
 
                 {/* Expanded Lessons List */}
                 {isExpanded && (
-                  <div className="mt-2 ml-4 border-l-2 border-blue-500/30 pl-4">
+                  <div className="mt-3 ml-6 border-l-4 border-blue-500/50 pl-6 py-4">
                     {courseLessons.length === 0 ? (
-                      <GlassCard className="p-4 text-center">
-                        <p className="text-gray-400 text-sm">
+                      <GlassCard className="p-6 text-center border border-blue-400/20 bg-blue-500/5">
+                        <p className="text-gray-300 text-base font-semibold">
                           No lessons yet. Add your first lesson!
                         </p>
                       </GlassCard>
