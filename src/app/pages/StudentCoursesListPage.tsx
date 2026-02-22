@@ -38,11 +38,10 @@ export default function StudentCoursesListPage() {
     const fetchCourses = async () => {
       setLoading(true);
       try {
-        // Fetch published courses
+        // Fetch all courses
         const { data: coursesData, error: coursesError } = await supabase
           .from("courses")
           .select("*")
-          .eq("is_published", true)
           .order("created_at", { ascending: false });
 
         if (!coursesError && coursesData) {

@@ -17,6 +17,13 @@ CREATE INDEX idx_test_uploads_uploaded_by ON test_uploads(uploaded_by);
 -- Enable RLS
 ALTER TABLE test_uploads ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist (to avoid conflicts)
+DROP POLICY IF EXISTS "Teachers can view their course test uploads" ON test_uploads;
+DROP POLICY IF EXISTS "Teachers can upload tests for their courses" ON test_uploads;
+DROP POLICY IF EXISTS "Teachers can update their test uploads" ON test_uploads;
+DROP POLICY IF EXISTS "Teachers can delete their test uploads" ON test_uploads;
+DROP POLICY IF EXISTS "Students can view published tests from enrolled courses" ON test_uploads;
+
 -- RLS Policy: Teachers can see their own uploaded tests
 CREATE POLICY "Teachers can view their course test uploads"
   ON test_uploads FOR SELECT
@@ -53,6 +60,16 @@ CREATE POLICY "Teachers can delete their test uploads"
     uploaded_by = auth.uid() AND
     course_id IN (
       SELECT id FROM courses WHERE teacher_id = auth.uid()
+    )
+  );
+
+-- RLS Policy: Students can view published tests from their enrolled courses
+CREATE POLICY "Students can view published tests from enrolled courses"
+  ON test_uploads FOR SELECT
+  USING (
+    is_published = true AND
+    course_id IN (
+      SELECT course_id FROM enrollments WHERE student_id = auth.uid()
     )
   );
 

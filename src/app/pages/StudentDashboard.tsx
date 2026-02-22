@@ -9,6 +9,7 @@ import StreakCard from "../components/StreakCard";
 import LeaderboardPanel from "../components/LeaderboardPanel";
 import RevisionQuestCard from "../components/RevisionQuestCard";
 import StudentTestsSection from "../components/StudentTestsSection";
+import { ChatPanel } from "../components/ChatPanel";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from "react-router-dom";
@@ -397,6 +398,9 @@ export default function StudentDashboard() {
           </GlassCard>
         </div>
       </div>
+
+      {/* Chat Panel */}
+      <ChatPanel />
     </DashboardLayout>
   );
 }
