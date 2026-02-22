@@ -7,7 +7,8 @@ import VideoPlayer from "../components/VideoPlayer";
 import LessonList from "../components/LessonList";
 import AIRevisionCard from "../components/AIRevisionCard";
 import { ChatPanelContent } from "../components/ChatPanelContent";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import ChallengeRenderer from "../components/ChallengeRenderer";
+import { ArrowLeft, ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Course {
@@ -26,12 +27,26 @@ interface Lesson {
   created_at: string;
 }
 
+interface Challenge {
+  id: string;
+  course_id: string;
+  lesson_id: string;
+  title: string;
+  description: string;
+  challenge_type: string;
+  content: Record<string, any>;
+  xp_reward: number;
+  is_published: boolean;
+}
+
 export default function StudentCoursePage() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(true);
@@ -91,6 +106,41 @@ export default function StudentCoursePage() {
 
     if (courseId) fetchCourseData();
   }, [courseId, navigate]);
+
+  // Fetch challenges for selected lesson
+  useEffect(() => {
+    const fetchLessonChallenges = async () => {
+      if (!selectedLessonId || !courseId) {
+        setChallenges([]);
+        setSelectedChallengeId(null);
+        return;
+      }
+
+      try {
+        const { data: challengesData } = await supabase
+          .from("learning_challenges")
+          .select("*")
+          .eq("course_id", courseId)
+          .eq("lesson_id", selectedLessonId)
+          .eq("is_published", true)
+          .order("display_order", { ascending: true });
+
+        if (challengesData) {
+          setChallenges(challengesData);
+          if (challengesData.length > 0) {
+            setSelectedChallengeId(challengesData[0].id);
+          } else {
+            setSelectedChallengeId(null);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching lesson challenges:", error);
+        setChallenges([]);
+      }
+    };
+
+    fetchLessonChallenges();
+  }, [selectedLessonId, courseId]);
 
   if (loading) {
     return (
@@ -172,6 +222,59 @@ export default function StudentCoursePage() {
                     description={course.description}
                     transcript={selectedLesson.youtube_url}
                   />
+                </GlassCard>
+              </div>
+            )}
+
+            {/* Challenges Section */}
+            {challenges.length > 0 && (
+              <div className="shrink-0">
+                <GlassCard className="p-6 border-t-2 border-yellow-500 bg-linear-to-b from-yellow-500/5 to-transparent">
+                  <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 drop-shadow-md">
+                    <Zap className="text-yellow-400" size={20} />
+                    Learning Challenges
+                  </h3>
+                  
+                  {/* Challenge Tabs */}
+                  <div className="space-y-4">
+                    {challenges.length > 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                        {challenges.map((challenge) => (
+                          <button
+                            key={challenge.id}
+                            onClick={() => setSelectedChallengeId(challenge.id)}
+                            className={`p-3 rounded-lg text-left transition-all border-2 ${
+                              selectedChallengeId === challenge.id
+                                ? 'border-yellow-400 bg-yellow-500/10'
+                                : 'border-gray-600 bg-gray-800/30 hover:border-yellow-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-semibold text-white text-sm">{challenge.title}</p>
+                                <p className="text-xs text-gray-300 capitalize">
+                                  {challenge.challenge_type.replace('_', ' ')}
+                                </p>
+                              </div>
+                              <span className="text-yellow-400 font-bold text-sm">{challenge.xp_reward} XP</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Selected Challenge Renderer */}
+                    {selectedChallengeId && (
+                      <div className="mt-6 p-4 bg-black/20 rounded-lg">
+                        <ChallengeRenderer 
+                          challengeId={selectedChallengeId}
+                          onComplete={(xp, badges) => {
+                            console.log(`Challenge completed! +${xp} XP, Badges: ${badges.join(', ')}`);
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </GlassCard>
               </div>
             )}

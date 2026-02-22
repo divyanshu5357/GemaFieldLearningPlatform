@@ -11,6 +11,8 @@ import TeacherSignupPage from "./pages/TeacherSignupPage";
 import TestBuilder from "./pages/TestBuilder";
 import TestEditor from "./pages/TestEditor";
 import StudentTestPage from "./pages/StudentTestPage";
+import StudentTestTaking from "./pages/StudentTestTaking";
+import StudentTestResults from "./pages/StudentTestResults";
 import StudentProgressPage from "./pages/StudentProgressPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import StudentCoursesListPage from "./pages/StudentCoursesListPage";
@@ -22,6 +24,7 @@ import TeacherStudentsPage from "./pages/TeacherStudentsPage";
 import SettingsPage from "./pages/SettingsPage";
 import ContentUploadHub from "./pages/ContentUploadHub";
 import TeacherContentUpload from "./pages/TeacherContentUpload";
+import MentorshipPage from "./pages/MentorshipPage";
 
 export const router = createBrowserRouter([
   {
@@ -50,6 +53,14 @@ export const router = createBrowserRouter([
     Component: StudentDashboard,
   },
   {
+    path: "/test/:testId",
+    Component: StudentTestTaking,
+  },
+  {
+    path: "/test/:testId/results",
+    Component: StudentTestResults,
+  },
+  {
     path: "/dashboard/student/test/:testId",
     Component: StudentTestPage,
   },
@@ -75,7 +86,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/dashboard/student/mentors",
-    element: <PlaceholderPage role="student" title="Mentorship" />,
+    Component: MentorshipPage,
   },
   {
     path: "/dashboard/student/settings",

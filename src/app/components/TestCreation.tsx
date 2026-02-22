@@ -20,6 +20,7 @@ interface Test {
   duration_minutes: number;
   total_points: number;
   passing_score: number;
+  max_attempts: number;
   is_published: boolean;
   created_at: string;
   updated_at: string;
@@ -48,7 +49,7 @@ export default function TestCreation({ courseId, onTestAdded }: TestCreationProp
   const [questionType, setQuestionType] = useState<"multiple_choice" | "short_answer" | "essay">("multiple_choice");
   const [questionPoints, setQuestionPoints] = useState("1");
   const [options, setOptions] = useState<string[]>(["", "", "", ""]);
-  const [correctAnswer, setCorrectAnswer] = useState("0");
+  const [correctAnswerIndex, setCorrectAnswerIndex] = useState(0);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +95,7 @@ export default function TestCreation({ courseId, onTestAdded }: TestCreationProp
         return;
       }
       newQuestion.options = options;
-      newQuestion.correct_answer = options[parseInt(correctAnswer)];
+      newQuestion.correct_answer = options[correctAnswerIndex];
     }
 
     setQuestions([...questions, newQuestion]);
@@ -102,7 +103,7 @@ export default function TestCreation({ courseId, onTestAdded }: TestCreationProp
     setQuestionType("multiple_choice");
     setQuestionPoints("1");
     setOptions(["", "", "", ""]);
-    setCorrectAnswer("0");
+    setCorrectAnswerIndex(0);
     setError(null);
   };
 
@@ -394,8 +395,8 @@ export default function TestCreation({ courseId, onTestAdded }: TestCreationProp
                         <input
                           type="radio"
                           name="correct"
-                          checked={correctAnswer === idx.toString()}
-                          onChange={() => setCorrectAnswer(idx.toString())}
+                          checked={correctAnswerIndex === idx}
+                          onChange={() => setCorrectAnswerIndex(idx)}
                           className="h-4 w-4"
                         />
                         <input
@@ -409,8 +410,30 @@ export default function TestCreation({ courseId, onTestAdded }: TestCreationProp
                           placeholder={`Option ${idx + 1}`}
                           className="flex-1 bg-white/10 border border-blue-400 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                        {options.length > 2 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newOptions = options.filter((_, i) => i !== idx);
+                              setOptions(newOptions);
+                              if (correctAnswerIndex >= newOptions.length && correctAnswerIndex > 0) {
+                                setCorrectAnswerIndex(correctAnswerIndex - 1);
+                              }
+                            }}
+                            className="text-red-400 hover:text-red-300 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     ))}
+                    <button
+                      type="button"
+                      onClick={() => setOptions([...options, ""])}
+                      className="text-sm text-blue-300 hover:text-blue-200 transition-colors font-medium mt-2"
+                    >
+                      + Add Option
+                    </button>
                     <p className="text-xs text-gray-300 mt-1">
                       Select the radio button for the correct answer
                     </p>
@@ -531,6 +554,22 @@ export default function TestCreation({ courseId, onTestAdded }: TestCreationProp
               </div>
 
               <div className="flex gap-2 ml-4 shrink-0">
+                <button
+                  onClick={() => {
+                    setEditingTest(test);
+                    setShowForm(true);
+                    setTitle(test.title);
+                    setDescription(test.description);
+                    setDurationMinutes(test.duration_minutes.toString());
+                    setPassingScore(test.passing_score.toString());
+                    setMaxAttempts(test.max_attempts.toString());
+                    setQuestions(test.questions || []);
+                  }}
+                  className="px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm rounded transition-colors flex items-center gap-1"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </button>
                 <button
                   onClick={() => handleTogglePublish(test.id, test.is_published)}
                   className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded transition-colors"

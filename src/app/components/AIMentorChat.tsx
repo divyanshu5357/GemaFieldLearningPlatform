@@ -184,10 +184,14 @@ export const AIMentorChat = ({ lesson, courseTitle = "Course" }: AIMentorChatPro
                   </div>
                 ))}
                 {loading && (
-                  <div className="flex justify-start">
-                    <div className="bg-white/10 text-gray-100 rounded-lg rounded-bl-none border border-white/10 px-4 py-2 flex items-center gap-2">
-                      <Loader className="h-4 w-4 animate-spin text-blue-400" />
-                      <span className="text-sm">Thinking...</span>
+                  <div className="flex justify-start animate-pulse">
+                    <div className="bg-linear-to-r from-blue-500/20 to-purple-500/20 text-gray-100 rounded-lg rounded-bl-none border border-blue-400/30 px-4 py-3 flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                      </div>
+                      <span className="text-sm font-medium text-blue-300">AI is thinking...</span>
                     </div>
                   </div>
                 )}

@@ -355,3 +355,108 @@ export async function fetchChatHistory(
     return [];
   }
 }
+
+/**
+ * Analyze test results using Groq AI to identify strong and weak points
+ */
+export async function analyzeTestResults(
+  questions: any[],
+  answers: Record<string, any>,
+  testTitle: string
+): Promise<{
+  strongPoints?: string[];
+  weakPoints?: string[];
+  recommendations?: string[];
+  overallAnalysis?: string;
+  error?: string;
+}> {
+  try {
+    if (!GROQ_API_KEY) {
+      return { error: "Groq API key not configured. Please add VITE_GROQ_API_KEY to your .env file" };
+    }
+
+    // Format questions and answers for analysis
+    const questionsText = questions
+      .map((q: any, idx: number) => {
+        const userAnswer = answers[q.id];
+        const isCorrect = userAnswer === q.correct_answer;
+        return `Q${idx + 1}: ${q.text}
+Options: ${q.options?.join(", ") || "N/A"}
+Correct Answer: ${q.correct_answer}
+Student Answer: ${userAnswer}
+Result: ${isCorrect ? "✓ CORRECT" : "✗ INCORRECT"}`;
+      })
+      .join("\n\n");
+
+    const systemPrompt = `You are an expert educator and test analyst. Analyze the student's test answers comprehensively.
+Identify patterns in what the student knows well (strong points) and where they need improvement (weak points).
+Group topics by subject area, not individual questions.
+
+Format your response as JSON:
+{
+  "strongPoints": ["topic 1 with brief explanation", "topic 2 with brief explanation"],
+  "weakPoints": ["topic 1 with brief explanation", "topic 2 with brief explanation"],
+  "recommendations": ["actionable recommendation 1", "actionable recommendation 2", "actionable recommendation 3"],
+  "overallAnalysis": "1-2 sentences about overall performance and learning path"
+}`;
+
+    const content = `Test: "${testTitle}"
+
+${questionsText}
+
+Based on these answers:
+1. Identify topics where the student performed well
+2. Identify topics where the student struggled
+3. Provide 3 specific, actionable recommendations for improvement
+4. Give an overall analysis of their performance
+
+Analyze comprehensively, not just individual questions.`;
+
+    console.log("Calling Groq for test analysis...");
+    const response = await callGroq(content, systemPrompt);
+    console.log("Test Analysis Response:", response);
+
+    const parsed = parseJSONFromText(response);
+
+    return {
+      strongPoints: parsed.strongPoints as string[],
+      weakPoints: parsed.weakPoints as string[],
+      recommendations: parsed.recommendations as string[],
+      overallAnalysis: parsed.overallAnalysis as string,
+    };
+  } catch (err) {
+    console.error("Test analysis error:", err);
+    return { error: err instanceof Error ? err.message : "Failed to analyze test results" };
+  }
+}
+
+/**
+ * Generate AI hint for a learning challenge (simplified version)
+ */
+export async function generateAIHint(
+  challengeType: string,
+  content: any
+): Promise<string> {
+  try {
+    if (!GROQ_API_KEY) {
+      throw new Error("Groq API key not configured");
+    }
+
+    const systemPrompt = `You are a helpful learning assistant providing concise hints for educational challenges.
+- Give hints that guide without giving away the answer
+- Keep hints to 2-3 sentences max
+- Be encouraging
+- Tailor to ${challengeType} challenges`;
+
+    const prompt = `Provide a helpful hint for a ${challengeType} challenge: ${JSON.stringify(content).substring(0, 500)}`;
+
+    console.log("Generating AI hint...");
+    const response = await callGroq(prompt, systemPrompt);
+    console.log("AI Hint Response:", response);
+
+    return response.trim();
+  } catch (err) {
+    console.error("Hint generation error:", err);
+    return "Try breaking down the problem into smaller steps.";
+  }
+}

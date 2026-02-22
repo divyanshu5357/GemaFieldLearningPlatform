@@ -5,6 +5,8 @@ import { DashboardLayout } from "../components/DashboardLayout";
 import { GlassCard } from "../components/GlassCard";
 import { ChatPanelContent } from "../components/ChatPanelContent";
 import AIRevisionCard from "../components/AIRevisionCard";
+import AIChallengeCard from "../components/AIChallengeCard";
+import { addXP, XP_REWARDS } from "../../lib/xp-system";
 import { ArrowLeft, Clock, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -31,6 +33,10 @@ export default function LessonPage() {
   const [completed, setCompleted] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
   const [chatWidth, setChatWidth] = useState(350);
+  const [xpAwarded, setXpAwarded] = useState(false);
+  const [videoWatchPercent, setVideoWatchPercent] = useState(0);
+  const [showXpNotification, setShowXpNotification] = useState(false);
+  const [xpEarned, setXpEarned] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -100,6 +106,7 @@ export default function LessonPage() {
             lesson_id: lessonId,
             course_id: courseId,
             status: "completed",
+            watched_at: new Date().toISOString(),
             completed_at: new Date().toISOString(),
           },
         ],
@@ -110,10 +117,33 @@ export default function LessonPage() {
 
       if (error) throw error;
 
+      // Award XP for watching lesson
+      if (!xpAwarded) {
+        const result = await addXP(studentId, XP_REWARDS.WATCH_LESSON, "Watched Video Lesson");
+        if (result.success) {
+          setXpAwarded(true);
+          setXpEarned(XP_REWARDS.WATCH_LESSON);
+          setShowXpNotification(true);
+          setTimeout(() => setShowXpNotification(false), 3000);
+        }
+      }
+
       setCompleted(true);
-      alert("✅ Lesson marked as complete!");
     } catch (error: any) {
-      alert(`Error: ${error.message}`);
+      console.error("Error:", error.message);
+    }
+  };
+
+  // Auto-award XP when video is 90% watched
+  const handleVideoProgress = async (event: any) => {
+    const video = event.target;
+    const percent = (video.currentTime / video.duration) * 100;
+    setVideoWatchPercent(percent);
+
+    // Award XP at 90% watch
+    if (percent >= 90 && !xpAwarded && !completed) {
+      console.log("90% watched - auto-completing lesson");
+      await handleMarkComplete();
     }
   };
 
@@ -175,7 +205,15 @@ export default function LessonPage() {
           </button>
 
           {/* Video Card */}
-          <GlassCard className="flex-1 p-6 flex flex-col overflow-hidden">
+          <GlassCard className="flex-1 p-6 flex flex-col overflow-hidden relative">
+            {/* XP Notification */}
+            {showXpNotification && (
+              <div className="absolute top-6 right-6 z-50 animate-bounce bg-linear-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
+                <span className="text-xl">⭐</span>
+                <span className="font-bold">+{xpEarned} XP</span>
+              </div>
+            )}
+
             {/* Video Player */}
             <div className="flex-1 mb-4 rounded-lg overflow-hidden bg-black">
               {embedUrl ? (
@@ -191,9 +229,23 @@ export default function LessonPage() {
                   src={lesson.youtube_url}
                   controls
                   className="w-full h-full"
+                  onTimeUpdate={handleVideoProgress}
                 />
               )}
             </div>
+
+            {/* Video Progress Bar (for non-iframe videos) */}
+            {!embedUrl && videoWatchPercent > 0 && (
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-linear-to-r from-blue-500 to-purple-500 transition-all duration-300"
+                    style={{ width: `${videoWatchPercent}%` }}
+                  />
+                </div>
+                <span className="text-xs text-gray-400 whitespace-nowrap">{Math.round(videoWatchPercent)}%</span>
+              </div>
+            )}
 
             {/* Lesson Info */}
             <div className="space-y-4 border-t border-white/10 pt-4">
@@ -220,13 +272,20 @@ export default function LessonPage() {
               )}
 
               {/* Mark Complete Button */}
-              {!completed && (
+              {!completed ? (
                 <button
                   onClick={handleMarkComplete}
-                  className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-2 rounded-lg transition-colors text-sm"
+                  className="w-full bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold py-3 rounded-lg transition-all duration-200 text-sm flex items-center justify-center gap-2 shadow-lg"
                 >
-                  Mark as Complete
+                  <span>✓ Mark as Complete</span>
+                  <span className="text-yellow-300 font-bold">+{XP_REWARDS.WATCH_LESSON} XP</span>
                 </button>
+              ) : (
+                <div className="w-full bg-linear-to-r from-green-600/20 to-emerald-600/20 border border-green-500/50 text-white font-semibold py-3 rounded-lg text-sm flex items-center justify-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-400" />
+                  <span>Completed!</span>
+                  {xpAwarded && <span className="text-green-300 font-bold">+{xpEarned} XP</span>}
+                </div>
               )}
 
               {/* AI Revision Card */}
@@ -235,6 +294,15 @@ export default function LessonPage() {
                 description={lesson.description || ""}
                 transcript={lesson.youtube_url}
               />
+
+              {/* AI Challenge Card */}
+              {completed && studentId && (
+                <AIChallengeCard
+                  lessonTitle={lesson.title}
+                  courseTitle={course?.title || "Course"}
+                  userId={studentId}
+                />
+              )}
             </div>
           </GlassCard>
         </div>

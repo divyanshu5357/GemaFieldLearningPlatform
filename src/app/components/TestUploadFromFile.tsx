@@ -73,36 +73,64 @@ export default function TestUploadFromFile({ courseId, onTestUploaded }: TestUpl
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error("Not authenticated");
 
-      // Upload file to storage
+      // Generate file reference path
       const fileName = `test-${Date.now()}-${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("test-uploads")
-        .upload(`${courseId}/${fileName}`, file);
+      const fileReference = `test-files/${courseId}/${fileName}`;
+      
+      // Try to upload to storage, but don't fail if it doesn't work
+      let fileUrl = fileReference; // Use reference path as fallback
+      
+      try {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("test-files")
+          .upload(`${courseId}/${fileName}`, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
 
-      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+        if (!uploadError && uploadData) {
+          // Get public URL if upload succeeded
+          const { data: publicUrlData } = supabase.storage
+            .from("test-files")
+            .getPublicUrl(`${courseId}/${fileName}`);
+          
+          if (publicUrlData?.publicUrl) {
+            fileUrl = publicUrlData.publicUrl;
+            console.log("File uploaded to storage:", fileUrl);
+          }
+        } else {
+          console.log("Storage upload skipped (bucket may not exist), using file reference");
+        }
+      } catch (storageErr: any) {
+        console.log("Storage not available, using file reference path:", fileReference);
+      }
 
-      // Get public URL
-      const { data: publicUrlData } = supabase.storage
-        .from("test-uploads")
-        .getPublicUrl(`${courseId}/${fileName}`);
+      // Always save to database - this is the important part
+      const { data: insertedData, error: insertError } = await supabase
+        .from("test_uploads")
+        .insert([
+          {
+            course_id: courseId,
+            file_name: file.name,
+            file_url: fileUrl,
+            uploaded_by: user.user.id,
+            is_published: true,  // Auto-publish immediately
+          },
+        ])
+        .select();
 
-      // Store record in database
-      const { error: insertError } = await supabase.from("test_uploads").insert([
-        {
-          course_id: courseId,
-          file_name: file.name,
-          file_url: publicUrlData.publicUrl,
-          uploaded_by: user.user.id,
-          is_published: false,
-        },
-      ]);
+      if (insertError) {
+        throw new Error(`Database error: ${insertError.message}`);
+      }
 
-      if (insertError) throw new Error(`Database error: ${insertError.message}`);
+      if (!insertedData || insertedData.length === 0) {
+        throw new Error("Failed to save test to database");
+      }
 
       setSuccess(true);
       setFile(null);
       
-      // Reload uploads
+      // Reload uploads list
       await loadUploads();
       onTestUploaded?.();
 

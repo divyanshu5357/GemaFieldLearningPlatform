@@ -1,7 +1,7 @@
 import { DashboardLayout } from "../components/DashboardLayout";
 import { GlassCard } from "../components/GlassCard";
 import { StatCard } from "../components/StatCard";
-import { TrendingUp, BarChart2, Calendar } from "lucide-react";
+import { TrendingUp, BarChart2, Calendar, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -22,6 +22,8 @@ export default function StudentProgressPage() {
     averageScore: 0,
     bestScore: 0,
     improvementTrend: 0,
+    totalChallenges: 0,
+    totalXP: 0,
   });
   const [loading, setLoading] = useState(true);
   const [studentId, setStudentId] = useState<string | null>(null);
@@ -54,6 +56,16 @@ export default function StudentProgressPage() {
 
           setResults(formattedResults);
 
+          // Fetch challenge progress
+          const { data: challengeProgress } = await supabase
+            .from("student_challenge_progress")
+            .select("xp_earned")
+            .eq("student_id", user.id)
+            .eq("status", "completed");
+
+          const totalChallenges = challengeProgress?.length || 0;
+          const totalXP = challengeProgress?.reduce((sum, cp: any) => sum + (cp.xp_earned || 0), 0) || 0;
+
           // Calculate stats
           if (formattedResults.length > 0) {
             const avgScore = Math.round(
@@ -77,6 +89,18 @@ export default function StudentProgressPage() {
               averageScore: avgScore,
               bestScore,
               improvementTrend: trend,
+              totalChallenges,
+              totalXP,
+            });
+          } else {
+            // No tests yet, but show challenge stats
+            setStats({
+              totalTests: 0,
+              averageScore: 0,
+              bestScore: 0,
+              improvementTrend: 0,
+              totalChallenges,
+              totalXP,
             });
           }
         }
@@ -133,13 +157,28 @@ export default function StudentProgressPage() {
           color="text-purple-500"
         />
         <StatCard
+          title="Challenges Completed"
+          value={String(stats.totalChallenges)}
+          icon={Zap}
+          color="text-yellow-500"
+        />
+        <StatCard
+          title="Total XP Earned"
+          value={String(stats.totalXP)}
+          icon={Zap}
+          color="text-orange-500"
+        />
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 mt-6">
+        <StatCard
           title="Best Score"
           value={`${stats.bestScore}%`}
           icon={BarChart2}
           color="text-green-500"
         />
         <StatCard
-          title="Improvement"
+          title="Improvement Trend"
           value={`${stats.improvementTrend > 0 ? "+" : ""}${stats.improvementTrend}%`}
           icon={TrendingUp}
           color={stats.improvementTrend >= 0 ? "text-green-500" : "text-red-500"}
