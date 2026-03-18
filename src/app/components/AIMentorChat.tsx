@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { Send, MessageCircle, X, Loader } from "lucide-react";
 import { askAIMentor, saveChatMessage, fetchChatHistory } from "../../lib/ai-api";
-
+//mentor/ai  chat var
 interface Message {
   id?: string;
   role: "user" | "ai";
   content: string;
   timestamp?: string;
 }
-
+// ai /metor chat var
 interface AIMentorChatProps {
   lesson: {
     id: string;
@@ -26,15 +26,13 @@ export const AIMentorChat = ({ lesson, courseTitle = "Course" }: AIMentorChatPro
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
 
-  // Fetch user and chat history when component mounts
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         const { data: userData } = await (window as any).supabase.auth.getUser();
         if (userData.user) {
           setStudentId(userData.user.id);
-
-          // Fetch chat history
+//  history of chats
           setLoadingHistory(true);
           const history = await fetchChatHistory(lesson.id, userData.user.id);
           const mappedMessages = history.map(msg => ({
@@ -56,7 +54,6 @@ export const AIMentorChat = ({ lesson, courseTitle = "Course" }: AIMentorChatPro
     }
   }, [isOpen, lesson.id]);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);

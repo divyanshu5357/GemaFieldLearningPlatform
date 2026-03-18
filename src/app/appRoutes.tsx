@@ -24,7 +24,7 @@ import TeacherStudentsPage from "./pages/TeacherStudentsPage";
 import SettingsPage from "./pages/SettingsPage";
 import ContentUploadHub from "./pages/ContentUploadHub";
 import TeacherContentUpload from "./pages/TeacherContentUpload";
-import MentorshipPage from "./pages/MentorshipPage";
+import { MentorshipPage } from "./features/mentorship";
 
 export const router = createBrowserRouter([
   {

@@ -49,6 +49,9 @@ export async function addXP(
   reason?: string
 ): Promise<{ success: boolean; newXP: number; newLevel: number; error?: string }> {
   try {
+    // First, verify user is authenticated and get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
     // Get current XP
     const { data: profile, error: fetchError } = await supabase
       .from("profiles")
@@ -56,39 +59,33 @@ export async function addXP(
       .eq("id", userId)
       .single();
 
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error("Fetch error:", fetchError);
+      throw fetchError;
+    }
 
     const currentXP = profile?.xp || 0;
     const newXP = currentXP + amount;
     const newLevel = calculateLevel(newXP);
 
-    // Update profile
-    const { error: updateError } = await supabase
+    // Update profile with error handling
+    const { data: updateData, error: updateError } = await supabase
       .from("profiles")
       .update({
         xp: newXP,
         level: newLevel,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", userId);
+      .eq("id", userId)
+      .select()
+      .single();
 
-    if (updateError) throw updateError;
-
-    // Log XP transaction for analytics (optional)
-    if (reason) {
-      try {
-        await supabase.from("xp_transactions").insert([
-          {
-            user_id: userId,
-            amount,
-            reason,
-            created_at: new Date().toISOString(),
-          },
-        ]);
-      } catch (err) {
-        console.warn("Failed to log XP transaction:", err);
-      }
+    if (updateError) {
+      console.error("Update error:", updateError);
+      throw updateError;
     }
+
+    console.log("XP updated successfully:", { userId, amount, newXP, newLevel });
 
     return { success: true, newXP, newLevel };
   } catch (error) {
@@ -118,12 +115,19 @@ export async function getUserXP(userId: string): Promise<{
       .eq("id", userId)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching profile:", error);
+      throw error;
+    }
+
+    console.log("Profile fetched:", profile);
 
     const xp = profile?.xp || 0;
-    const level = calculateLevel(xp);
+    const level = profile?.level || calculateLevel(xp);
     const progress = getLevelProgress(xp);
     const nextLevelXP = getXPForNextLevel(xp);
+
+    console.log("XP Data:", { xp, level, progress, nextLevelXP });
 
     return { xp, level, progress, nextLevelXP };
   } catch (error) {

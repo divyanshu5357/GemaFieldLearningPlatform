@@ -5,6 +5,7 @@ import { BookOpen, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { GlassCard } from "../components/GlassCard";
+import TeacherChat from "../components/TeacherChat";
 
 interface IncomingMessage {
   id: string;
@@ -20,6 +21,7 @@ export default function TeacherDashboard() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedStudent, setSelectedStudent] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -162,6 +164,7 @@ export default function TeacherDashboard() {
                 <div
                   key={msg.id}
                   className="p-4 bg-white/5 hover:bg-white/10 rounded-lg border border-blue-500/20 transition cursor-pointer"
+                  onClick={() => setSelectedStudent({ id: msg.sender_id, name: msg.sender_name })}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h4 className="font-semibold text-white">{msg.sender_name}</h4>
@@ -172,7 +175,16 @@ export default function TeacherDashboard() {
                       })}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-300 line-clamp-2">{msg.message}</p>
+                  <p className="text-sm text-gray-300 line-clamp-2 mb-3">{msg.message}</p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedStudent({ id: msg.sender_id, name: msg.sender_name });
+                    }}
+                    className="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
+                  >
+                    💬 Reply
+                  </button>
                 </div>
               ))}
               {incomingMessages.length > 5 && (
@@ -187,6 +199,16 @@ export default function TeacherDashboard() {
 
       {/* Course Manager */}
       <TeacherCourseManager />
+
+      {/* Teacher Chat Modal */}
+      {selectedStudent && currentUserId && (
+        <TeacherChat
+          studentId={selectedStudent.id}
+          studentName={selectedStudent.name}
+          teacherId={currentUserId}
+          onClose={() => setSelectedStudent(null)}
+        />
+      )}
     </DashboardLayout>
   );
 }

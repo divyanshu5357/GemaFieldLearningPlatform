@@ -1,7 +1,9 @@
 import { Sidebar } from "./Sidebar";
 import { Bell, Search, User } from "lucide-react";
 import { GlassCard } from "./GlassCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabase";
+import NotificationPanel from "./NotificationPanel";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -11,6 +13,19 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, role, title }: DashboardLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    getUser();
+  }, []);
 
   return (
     <div className="flex h-screen w-full bg-[#0b1736] text-white overflow-hidden flex-col md:flex-row">
@@ -32,9 +47,14 @@ export function DashboardLayout({ children, role, title }: DashboardLayoutProps)
               />
             </GlassCard>
 
-            <button className="relative rounded-full p-2 hover:bg-white/10 transition-colors shrink-0">
-              <Bell className="h-4 md:h-5 w-4 md:w-5 text-gray-400" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-blue-500 ring-2 ring-[#0b1736]" />
+            <button 
+              onClick={() => setNotificationPanelOpen(true)}
+              className="relative rounded-full p-2 hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
+            >
+              <Bell className="h-4 md:h-5 w-4 md:w-5 text-gray-400 hover:text-white transition-colors" />
+              {unreadCount > 0 && (
+                <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#0b1736] animate-pulse" />
+              )}
             </button>
 
             <div className="h-8 w-8 rounded-full bg-linear-to-tr from-blue-500 to-purple-600 ring-2 ring-white/10 flex items-center justify-center shrink-0">
@@ -50,6 +70,15 @@ export function DashboardLayout({ children, role, title }: DashboardLayoutProps)
           </div>
         </main>
       </div>
+
+      {/* Notification Panel */}
+      {userId && (
+        <NotificationPanel 
+          isOpen={notificationPanelOpen}
+          onClose={() => setNotificationPanelOpen(false)}
+          userId={userId}
+        />
+      )}
     </div>
   );
 }

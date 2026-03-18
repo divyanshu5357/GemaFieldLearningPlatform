@@ -6,6 +6,8 @@ import { GlassCard } from "../components/GlassCard";
 import { ChatPanelContent } from "../components/ChatPanelContent";
 import AIRevisionCard from "../components/AIRevisionCard";
 import AIChallengeCard from "../components/AIChallengeCard";
+import AIHintButton from "../components/AIHintButton";
+import { useAutoRevisionReminder } from "../../lib/learning-hooks";
 import { addXP, XP_REWARDS } from "../../lib/xp-system";
 import { ArrowLeft, Clock, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -94,6 +96,9 @@ export default function LessonPage() {
 
     if (courseId && lessonId) fetchData();
   }, [courseId, lessonId, navigate]);
+
+  // Auto-create revision reminder when lesson completes
+  useAutoRevisionReminder(studentId || "", lessonId || "");
 
   const handleMarkComplete = async () => {
     if (!studentId || !lessonId) return;
@@ -190,10 +195,10 @@ export default function LessonPage() {
 
   return (
     <DashboardLayout role="student" title={lesson.title}>
-      {/* Main Container with Video + Chat Side Panel */}
-      <div className="flex gap-4 w-full min-h-150">
+      {/* Main Container */}
+      <div className="flex gap-4 w-full h-screen">
         
-        {/* Left Side - Video Content */}
+        {/* Left Side - Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Breadcrumb */}
           <button
@@ -204,51 +209,53 @@ export default function LessonPage() {
             Back to Course
           </button>
 
-          {/* Video Card */}
-          <GlassCard className="flex-1 p-6 flex flex-col overflow-hidden relative">
+          {/* Main Content - Scrollable */}
+          <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+            
             {/* XP Notification */}
             {showXpNotification && (
-              <div className="absolute top-6 right-6 z-50 animate-bounce bg-linear-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
+              <div className="fixed top-6 right-6 z-50 animate-bounce bg-linear-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
                 <span className="text-xl">⭐</span>
                 <span className="font-bold">+{xpEarned} XP</span>
               </div>
             )}
 
-            {/* Video Player */}
-            <div className="flex-1 mb-4 rounded-lg overflow-hidden bg-black">
-              {embedUrl ? (
-                <iframe
-                  src={embedUrl}
-                  title={lesson.title}
-                  className="w-full h-full"
-                  allowFullScreen
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                />
-              ) : (
-                <video
-                  src={lesson.youtube_url}
-                  controls
-                  className="w-full h-full"
-                  onTimeUpdate={handleVideoProgress}
-                />
-              )}
-            </div>
-
-            {/* Video Progress Bar (for non-iframe videos) */}
-            {!embedUrl && videoWatchPercent > 0 && (
-              <div className="mb-3 flex items-center gap-2">
-                <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-linear-to-r from-blue-500 to-purple-500 transition-all duration-300"
-                    style={{ width: `${videoWatchPercent}%` }}
+            {/* Video Card */}
+            <GlassCard className="p-6">
+              {/* Video Player */}
+              <div className="h-64 mb-4 rounded-lg overflow-hidden bg-black">
+                {embedUrl ? (
+                  <iframe
+                    src={embedUrl}
+                    title={lesson.title}
+                    className="w-full h-full"
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   />
-                </div>
-                <span className="text-xs text-gray-400 whitespace-nowrap">{Math.round(videoWatchPercent)}%</span>
+                ) : (
+                  <video
+                    src={lesson.youtube_url}
+                    controls
+                    className="w-full h-full"
+                    onTimeUpdate={handleVideoProgress}
+                  />
+                )}
               </div>
-            )}
 
-            {/* Lesson Info */}
-            <div className="space-y-4 border-t border-white/10 pt-4">
+              {/* Video Progress Bar (for non-iframe videos) */}
+              {!embedUrl && videoWatchPercent > 0 && (
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-linear-to-r from-blue-500 to-purple-500 transition-all duration-300"
+                      style={{ width: `${videoWatchPercent}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-400 whitespace-nowrap">{Math.round(videoWatchPercent)}%</span>
+                </div>
+              )}
+
+              {/* Lesson Title & Info */}
               <div>
                 <h1 className="text-2xl font-bold text-white mb-2">{lesson.title}</h1>
                 <div className="flex items-center gap-4 text-sm text-gray-400">
@@ -264,14 +271,18 @@ export default function LessonPage() {
                   )}
                 </div>
               </div>
+            </GlassCard>
 
-              {lesson.description && (
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-300">
-                  {lesson.description}
-                </div>
-              )}
+            {/* Lesson Description */}
+            {lesson.description && (
+              <GlassCard className="p-4">
+                <h3 className="text-lg font-semibold text-white mb-2">📚 Lesson Overview</h3>
+                <p className="text-sm text-gray-300">{lesson.description}</p>
+              </GlassCard>
+            )}
 
-              {/* Mark Complete Button */}
+            {/* Mark Complete Button */}
+            <GlassCard className="p-4">
               {!completed ? (
                 <button
                   onClick={handleMarkComplete}
@@ -287,34 +298,45 @@ export default function LessonPage() {
                   {xpAwarded && <span className="text-green-300 font-bold">+{xpEarned} XP</span>}
                 </div>
               )}
+            </GlassCard>
 
-              {/* AI Revision Card */}
-              <AIRevisionCard
+            {/* AI Hint Button */}
+            {studentId && (
+              <AIHintButton 
                 lessonTitle={lesson.title}
-                description={lesson.description || ""}
-                transcript={lesson.youtube_url}
+                context={lesson.description || ""}
+                studentAnswer=""
+                lessonId={lessonId}
+                userId={studentId}
               />
+            )}
 
-              {/* AI Challenge Card */}
-              {completed && studentId && (
-                <AIChallengeCard
-                  lessonTitle={lesson.title}
-                  courseTitle={course?.title || "Course"}
-                  userId={studentId}
-                />
-              )}
-            </div>
-          </GlassCard>
+            {/* AI Revision Card - Questions */}
+            <AIRevisionCard
+              lessonTitle={lesson.title}
+              description={lesson.description || ""}
+              transcript={lesson.youtube_url}
+            />
+
+            {/* AI Challenge Card */}
+            {completed && studentId && (
+              <AIChallengeCard
+                lessonTitle={lesson.title}
+                courseTitle={course?.title || "Course"}
+                userId={studentId}
+              />
+            )}
+          </div>
         </div>
 
-        {/* Right Side - Chat Panel with Resize */}
+        {/* Right Side - AI Mentor (Small) */}
         <div 
-          className="shrink-0 bg-linear-to-br from-slate-900/95 to-slate-800/95 rounded-2xl border border-white/10 backdrop-blur-xl flex flex-col overflow-hidden relative min-h-96"
-          style={{ width: `${chatWidth}px` }}
+          className="shrink-0 bg-linear-to-br from-slate-900/95 to-slate-800/95 rounded-2xl border border-white/10 backdrop-blur-xl flex flex-col overflow-hidden relative"
+          style={{ width: '320px' }}
         >
           {/* Chat Header */}
-          <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
-            <h2 className="text-white font-semibold flex items-center gap-2">
+          <div className="p-3 border-b border-white/10 flex items-center justify-between bg-white/5">
+            <h2 className="text-white font-semibold flex items-center gap-2 text-sm">
               <span className="text-lg">💬</span>
               AI Mentor
             </h2>
@@ -323,42 +345,18 @@ export default function LessonPage() {
               className="text-gray-400 hover:text-white transition-colors p-1"
               title={chatOpen ? "Minimize" : "Expand"}
             >
-              {chatOpen ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+              {chatOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </button>
           </div>
 
-          {/* Chat Component - Takes full remaining space */}
+          {/* Chat Component */}
           {chatOpen && (
             <div className="flex-1 overflow-hidden">
               <div className="h-full">
-                {/* Using custom chat UI instead of AIMentorChat component for better control */}
                 <ChatPanelContent lesson={lesson} studentId={studentId} courseTitle={course?.title} />
               </div>
             </div>
           )}
-
-          {/* Resize Handle */}
-          <div
-            className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500/50 bg-transparent group transition-colors"
-            onMouseDown={(e) => {
-              const startX = e.clientX;
-              const startWidth = chatWidth;
-
-              const handleMouseMove = (moveEvent: MouseEvent) => {
-                const diff = moveEvent.clientX - startX;
-                const newWidth = Math.max(250, Math.min(800, startWidth - diff));
-                setChatWidth(newWidth);
-              };
-
-              const handleMouseUp = () => {
-                document.removeEventListener("mousemove", handleMouseMove);
-                document.removeEventListener("mouseup", handleMouseUp);
-              };
-
-              document.addEventListener("mousemove", handleMouseMove);
-              document.addEventListener("mouseup", handleMouseUp);
-            }}
-          />
         </div>
       </div>
     </DashboardLayout>

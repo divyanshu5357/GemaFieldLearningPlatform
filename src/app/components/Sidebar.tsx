@@ -55,7 +55,6 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
     teacher: [
       { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard/teacher" },
       { name: "Manage Courses", icon: BookOpen, path: "/dashboard/teacher/courses" },
-      { name: "All Students", icon: GraduationCap, path: "/dashboard/teacher/students" },
     ],
     admin: [
       { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard/admin" },

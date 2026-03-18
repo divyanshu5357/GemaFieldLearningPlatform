@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { GlassCard } from "./GlassCard";
-import { Play, CheckCircle, AlertCircle, Clock, BookOpen, BarChart3 } from "lucide-react";
+import { Play, CheckCircle, AlertCircle, Clock, BookOpen, BarChart3, Zap } from "lucide-react";
+import { addXP, XP_REWARDS } from "../../lib/xp-system";
 
 interface Question {
   id: string;
@@ -49,13 +50,11 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
   const [takingTest, setTakingTest] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  // Test taking state
+  const [notification, setNotification] = useState<{ xp: number; isPassed: boolean } | null>(null);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // Load published tests and student attempts
   useEffect(() => {
     loadTests();
   }, [courseId]);
@@ -63,7 +62,6 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
   const loadTests = async () => {
     setLoading(true);
     try {
-      // Get published tests for course
       const { data: testsData, error: testsError } = await supabase
         .from("tests")
         .select("*")
@@ -74,7 +72,6 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
       if (!testsError && testsData) {
         setTests(testsData);
 
-        // Get attempts for each test
         const attemptsMap: Record<string, TestAttempt> = {};
         for (const test of testsData) {
           const { data: attemptData } = await supabase
@@ -105,14 +102,13 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
     setError(null);
   };
 
-  // Timer effect
   useEffect(() => {
     if (!takingTest || timeRemaining <= 0) return;
 
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
-          handleSubmitTest(); // Auto-submit when time runs out
+          handleSubmitTest();
           return 0;
         }
         return prev - 1;
@@ -122,14 +118,12 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
     return () => clearInterval(timer);
   }, [takingTest, timeRemaining]);
 
-  // Format time
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Submit test
   const handleSubmitTest = async () => {
     if (!takingTest) return;
     
@@ -139,7 +133,6 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
     setSubmitting(true);
 
     try {
-      // Calculate score
       let score = 0;
       const answersList = [];
 
@@ -159,7 +152,6 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
 
       const is_passed = (score / test.total_points) * 100 >= test.passing_score;
 
-      // Create or update test attempt
       const { data: attemptData, error: attemptError } = await supabase
         .from("test_attempts")
         .upsert(
@@ -180,6 +172,23 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
       if (attemptError) {
         throw new Error(`Failed to submit test: ${attemptError.message}`);
       }
+
+      let xpEarned = XP_REWARDS.COMPLETE_TEST;
+      if (is_passed) {
+        xpEarned += 30;
+      }
+      const scorePercentage = (score / test.total_points) * 100;
+      if (scorePercentage === 100) {
+        xpEarned += 50;
+      } else if (scorePercentage >= 90) {
+        xpEarned += 25;
+      }
+
+      await addXP(studentId, xpEarned, `Completed Test: ${test.title}`);
+
+      // Show XP notification
+      setNotification({ xp: xpEarned, isPassed: is_passed });
+      setTimeout(() => setNotification(null), 4000);
 
       setSuccess(true);
       setTakingTest(null);
@@ -204,7 +213,6 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
   const currentTest = takingTest ? tests.find(t => t.id === takingTest) : null;
   const currentAttempt = takingTest ? attempts[takingTest] : null;
 
-  // If taking test, show test interface
   if (takingTest && currentTest) {
     return (
       <GlassCard className="p-6 border-2 border-blue-500">
@@ -221,7 +229,6 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
           </div>
         </div>
 
-        {/* Questions */}
         <div className="space-y-6 mb-6">
           {currentTest.questions.map((question, qIdx) => (
             <div key={question.id} className="bg-white/5 p-4 rounded-lg border border-blue-400">
@@ -275,7 +282,6 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
           ))}
         </div>
 
-        {/* Submit Button */}
         <div className="flex gap-2">
           <button
             onClick={handleSubmitTest}
@@ -298,13 +304,11 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h2 className="text-3xl font-bold text-white mb-1">📚 Course Tests</h2>
         <p className="text-gray-200 text-sm">Take tests and check your scores</p>
       </div>
 
-      {/* Messages */}
       {error && (
         <div className="bg-red-500/20 border-2 border-red-500 rounded-lg p-4 flex items-center gap-2">
           <AlertCircle className="h-5 w-5 text-red-400" />
@@ -319,7 +323,6 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
         </div>
       )}
 
-      {/* Tests List */}
       <div className="space-y-3">
         {loading && (
           <GlassCard className="p-8 text-center">
@@ -416,6 +419,23 @@ export default function StudentTestSubmission({ courseId, studentId }: StudentTe
           );
         })}
       </div>
+
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 animate-slideIn">
+          <div className="bg-linear-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/50 rounded-lg p-4 flex items-center gap-3 backdrop-blur-md">
+            <div className="p-2 bg-yellow-500/30 rounded-lg">
+              <Zap className="h-5 w-5 text-yellow-300" />
+            </div>
+            <div>
+              <p className="text-yellow-300 font-bold">+{notification.xp} XP Earned!</p>
+              <p className="text-xs text-yellow-200">
+                {notification.isPassed ? "✓ Test Passed!" : "Test Completed"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

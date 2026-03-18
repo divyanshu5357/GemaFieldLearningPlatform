@@ -1,21 +1,29 @@
 import { useState, useEffect } from "react";
 import { GlassCard } from "./GlassCard";
 import { Zap, TrendingUp, AlertCircle, Loader, Brain } from "lucide-react";
-import { analyzeStudentPerformance, fetchStudentTestResults } from "../../lib/ai-api";
 import { supabase } from "../../lib/supabase";
 
-interface AIInsights {
-  weak_topics?: string[];
-  improvement_suggestions?: string[];
-  next_learning_steps?: string[];
-  error?: string;
+interface WeakTopic {
+  topic: string;
+  avg_score: number;
+  count: number;
+}
+
+interface StrongTopic {
+  topic: string;
+  avg_score: number;
+  count: number;
+}
+
+interface StudentInsight {
+  weak_topics?: WeakTopic[];
+  strong_topics?: StrongTopic[];
 }
 
 export default function AIInsightsPanel() {
-  const [insights, setInsights] = useState<AIInsights | null>(null);
+  const [insights, setInsights] = useState<StudentInsight | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [testResults, setTestResults] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
     loadInsights();
@@ -26,27 +34,59 @@ export default function AIInsightsPanel() {
     setError(null);
 
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
         setError("Not authenticated");
         setIsLoading(false);
         return;
       }
 
-      // Fetch test results
-      const results = await fetchStudentTestResults(user.user.id);
+      // Fetch test results by topic from database
+      const { data: testResults, error: dbError } = await supabase
+        .from("test_results_by_topic")
+        .select("topic, score")
+        .eq("student_id", userData.user.id)
+        .order("created_at", { ascending: false });
 
-      if (Object.keys(results).length === 0) {
+      if (dbError) {
+        setError("Failed to fetch test results");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!testResults || testResults.length === 0) {
         setError("No test results available. Complete some tests first!");
         setIsLoading(false);
         return;
       }
 
-      setTestResults(results);
+      // Group by topic and calculate averages
+      const topicStats: Record<string, { scores: number[], count: number }> = {};
+      
+      testResults.forEach((result: any) => {
+        if (!topicStats[result.topic]) {
+          topicStats[result.topic] = { scores: [], count: 0 };
+        }
+        topicStats[result.topic].scores.push(result.score);
+        topicStats[result.topic].count++;
+      });
 
-      // Get AI insights
-      const aiInsights = await analyzeStudentPerformance(results);
-      setInsights(aiInsights);
+      // Calculate weak and strong topics
+      const allTopics = Object.entries(topicStats).map(([topic, data]) => ({
+        topic,
+        avg_score: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length),
+        count: data.count,
+      }));
+
+      const weakTopics = allTopics.filter(t => t.avg_score < 60).sort((a, b) => a.avg_score - b.avg_score);
+      const strongTopics = allTopics.filter(t => t.avg_score >= 75).sort((a, b) => b.avg_score - a.avg_score);
+
+      const studentInsights: StudentInsight = {
+        weak_topics: weakTopics,
+        strong_topics: strongTopics,
+      };
+
+      setInsights(studentInsights);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate insights");
     } finally {
@@ -85,9 +125,13 @@ export default function AIInsightsPanel() {
     );
   }
 
+  if (!insights) {
+    return null;
+  }
+
   return (
     <GlassCard className="p-6 space-y-6 border-2 border-blue-500/30 bg-blue-500/10">
-      {/* Header */}
+
       <div className="flex items-center gap-3">
         <div className="p-3 bg-blue-500/20 rounded-lg">
           <Brain className="h-6 w-6 text-blue-400" />
@@ -98,90 +142,64 @@ export default function AIInsightsPanel() {
         </div>
       </div>
 
-      {/* Performance Overview */}
-      {testResults && (
-        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-          <p className="text-sm text-gray-300 font-semibold mb-3">Your Recent Scores</p>
-          <div className="space-y-2">
-            {Object.entries(testResults).map(([topic, score]) => (
-              <div key={topic} className="flex items-center justify-between">
-                <span className="text-gray-200">{topic}</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 bg-gray-700 rounded-full h-2">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        score >= 75
-                          ? "bg-green-500"
-                          : score >= 50
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                      }`}
-                      style={{ width: `${score}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-semibold text-white w-12 text-right">{score}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Weak Topics */}
-      {insights?.weak_topics && insights.weak_topics.length > 0 && (
+      {/* Weak Topics - Areas for Improvement */}
+      {insights.weak_topics && insights.weak_topics.length > 0 && (
         <div className="border-l-4 border-red-500 pl-4">
           <div className="flex items-center gap-2 mb-3">
             <AlertCircle className="h-5 w-5 text-red-400" />
             <p className="text-sm text-gray-300 font-semibold">Areas for Improvement</p>
           </div>
           <ul className="space-y-2">
-            {insights.weak_topics.map((topic, idx) => (
+            {insights.weak_topics.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2 text-gray-100 text-sm">
                 <span className="text-red-400 font-bold mt-0.5">•</span>
-                <span>{topic}</span>
+                <div>
+                  <span className="font-semibold">{item.topic}</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="w-20 bg-gray-700 rounded-full h-1.5">
+                      <div
+                        className="h-full bg-red-500 rounded-full"
+                        style={{ width: `${item.avg_score}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-400">{item.avg_score}%</span>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      {/* Improvement Suggestions */}
-      {insights?.improvement_suggestions &&
-        insights.improvement_suggestions.length > 0 && (
-        <div className="border-l-4 border-yellow-500 pl-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Zap className="h-5 w-5 text-yellow-400" />
-            <p className="text-sm text-gray-300 font-semibold">Improvement Tips</p>
-          </div>
-          <ul className="space-y-2">
-            {insights.improvement_suggestions.map((suggestion, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-gray-100 text-sm">
-                <span className="text-yellow-400 font-bold mt-0.5">💡</span>
-                <span>{suggestion}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Next Learning Steps */}
-      {insights?.next_learning_steps && insights.next_learning_steps.length > 0 && (
+      {/* Strong Topics */}
+      {insights.strong_topics && insights.strong_topics.length > 0 && (
         <div className="border-l-4 border-green-500 pl-4">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="h-5 w-5 text-green-400" />
-            <p className="text-sm text-gray-300 font-semibold">Next Steps</p>
+            <p className="text-sm text-gray-300 font-semibold">Your Strengths</p>
           </div>
-          <ol className="space-y-2 list-decimal list-inside">
-            {insights.next_learning_steps.map((step, idx) => (
-              <li key={idx} className="text-gray-100 text-sm">
-                {step}
+          <ul className="space-y-2">
+            {insights.strong_topics.map((item, idx) => (
+              <li key={idx} className="flex items-start gap-2 text-gray-100 text-sm">
+                <span className="text-green-400 font-bold mt-0.5">✓</span>
+                <div>
+                  <span className="font-semibold">{item.topic}</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="w-20 bg-gray-700 rounded-full h-1.5">
+                      <div
+                        className="h-full bg-green-500 rounded-full"
+                        style={{ width: `${item.avg_score}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-400">{item.avg_score}%</span>
+                  </div>
+                </div>
               </li>
             ))}
-          </ol>
+          </ul>
         </div>
       )}
 
-      {/* Refresh Button */}
       <div className="pt-4 border-t border-white/10">
         <button
           onClick={loadInsights}
