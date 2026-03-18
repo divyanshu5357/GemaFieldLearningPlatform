@@ -53,9 +53,8 @@ body {
   color: var(--foreground);
 }
 
-/* Headings */
+/* Headings - Don't override Tailwind color classes */
 h1, h2, h3, h4, h5, h6 {
-  color: var(--foreground);
   font-weight: 600;
   line-height: 1.5;
 }

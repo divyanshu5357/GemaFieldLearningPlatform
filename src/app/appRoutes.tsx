@@ -5,10 +5,26 @@ import StudentDashboard from "./pages/StudentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import PlaceholderPage from "./pages/PlaceholderPage";
-import SignupPage from "./pages/SignupPage";
+import SignupSelectPage from "./pages/SignupSelectPage";
+import StudentSignupPage from "./pages/StudentSignupPage";
+import TeacherSignupPage from "./pages/TeacherSignupPage";
 import TestBuilder from "./pages/TestBuilder";
+import TestEditor from "./pages/TestEditor";
 import StudentTestPage from "./pages/StudentTestPage";
+import StudentTestTaking from "./pages/StudentTestTaking";
+import StudentTestResults from "./pages/StudentTestResults";
+import StudentProgressPage from "./pages/StudentProgressPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
+import StudentCoursesListPage from "./pages/StudentCoursesListPage";
+import StudentCoursePage from "./pages/StudentCoursePage";
+import LessonPage from "./pages/LessonPage";
+import TeacherCoursePage from "./pages/TeacherCoursePage";
+import TeacherCoursesPage from "./pages/TeacherCoursesPage";
+import TeacherStudentsPage from "./pages/TeacherStudentsPage";
+import SettingsPage from "./pages/SettingsPage";
+import ContentUploadHub from "./pages/ContentUploadHub";
+import TeacherContentUpload from "./pages/TeacherContentUpload";
+import { MentorshipPage } from "./features/mentorship";
 
 export const router = createBrowserRouter([
   {
@@ -16,8 +32,16 @@ export const router = createBrowserRouter([
     Component: LandingPage,
   },
   {
-    path :"/signup",
-    Component : SignupPage,
+    path: "/signup",
+    Component: SignupSelectPage,
+  },
+  {
+    path: "/signup/student",
+    Component: StudentSignupPage,
+  },
+  {
+    path: "/signup/teacher",
+    Component: TeacherSignupPage,
   },
 
   {
@@ -29,48 +53,76 @@ export const router = createBrowserRouter([
     Component: StudentDashboard,
   },
   {
+    path: "/test/:testId",
+    Component: StudentTestTaking,
+  },
+  {
+    path: "/test/:testId/results",
+    Component: StudentTestResults,
+  },
+  {
     path: "/dashboard/student/test/:testId",
     Component: StudentTestPage,
   },
   {
-    path: "/dashboard/student/courses",
-    element: <PlaceholderPage role="student" title="My Courses" />,
+    path: "/dashboard/student/progress",
+    Component: StudentProgressPage,
   },
   {
-    path: "/dashboard/student/progress",
-    element: <PlaceholderPage role="student" title="My Progress" />,
+    path: "/courses",
+    Component: StudentCoursesListPage,
+  },
+  {
+    path: "/dashboard/student/courses",
+    Component: StudentCoursesListPage,
+  },
+  {
+    path: "/courses/:courseId",
+    Component: StudentCoursePage,
+  },
+  {
+    path: "/courses/:courseId/lessons/:lessonId",
+    Component: LessonPage,
   },
   {
     path: "/dashboard/student/mentors",
-    element: <PlaceholderPage role="student" title="Mentorship" />,
+    Component: MentorshipPage,
   },
   {
     path: "/dashboard/student/settings",
-    element: <PlaceholderPage role="student" title="Settings" />,
+    element: <SettingsPage role="student" />,
   },
   {
     path: "/dashboard/teacher",
     Component: TeacherDashboard,
   },
   {
+    path: "/dashboard/teacher/course/:courseId",
+    Component: TeacherCoursePage,
+  },
+  {
     path: "/dashboard/teacher/test-builder/:courseId",
     Component: TestBuilder,
   },
   {
+    path: "/dashboard/teacher/test-editor/:testId",
+    Component: TestEditor,
+  },
+  {
     path: "/dashboard/teacher/courses",
-    element: <PlaceholderPage role="teacher" title="Manage Courses" />,
+    Component: TeacherCoursesPage,
   },
   {
     path: "/dashboard/teacher/upload",
-    element: <PlaceholderPage role="teacher" title="Upload Content" />,
+    Component: TeacherContentUpload,
   },
   {
     path: "/dashboard/teacher/students",
-    element: <PlaceholderPage role="teacher" title="Student List" />,
+    Component: TeacherStudentsPage,
   },
   {
     path: "/dashboard/teacher/settings",
-    element: <PlaceholderPage role="teacher" title="Settings" />,
+    element: <SettingsPage role="teacher" />,
   },
   {
     path: "/dashboard/admin",
@@ -86,10 +138,10 @@ export const router = createBrowserRouter([
   },
   {
     path: "/dashboard/admin/analytics",
-    element: <PlaceholderPage role="admin" title="Platform Analytics" />,
+    Component: AnalyticsPage,
   },
   {
     path: "/dashboard/admin/settings",
-    element: <PlaceholderPage role="admin" title="System Settings" />,
+    element: <SettingsPage role="admin" />,
   },
 ]);
