@@ -67,15 +67,15 @@ export default function TeacherStudentsPage() {
         </div>
 
         {/* Search Bar */}
-        <GlassCard className="p-4">
-          <div className="flex items-center gap-3 bg-white/5 border border-blue-500/30 rounded-lg px-4 py-2">
-            <Search className="h-5 w-5 text-gray-400" />
+        <GlassCard className="p-4 bg-white/5 border border-white/10">
+          <div className="flex items-center gap-3 rounded-full bg-white/8 border border-white/20 px-4 py-3 focus-within:ring-2 focus-within:ring-blue-500/80 focus-within:bg-white/12 focus-within:border-blue-400/50 transition-all duration-200 hover:bg-white/10">
+            <Search className="h-5 w-5 text-gray-300" />
             <input
               type="text"
               placeholder="Search by email or name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
+              className="flex-1 bg-transparent text-white placeholder-gray-400 text-sm font-medium outline-none caret-blue-400"
             />
           </div>
         </GlassCard>

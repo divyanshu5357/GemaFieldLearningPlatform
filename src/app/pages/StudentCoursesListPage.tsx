@@ -79,8 +79,10 @@ export default function StudentCoursesListPage() {
     const matchesSearch =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || course.category === selectedCategory;
-    const matchesLevel = !selectedLevel || course.level === selectedLevel;
+    const matchesCategory =
+      !selectedCategory || (course.category || "").toLowerCase() === selectedCategory;
+    const matchesLevel =
+      !selectedLevel || (course.level || "").toLowerCase() === selectedLevel;
 
     return matchesSearch && matchesCategory && matchesLevel;
   });
@@ -88,15 +90,15 @@ export default function StudentCoursesListPage() {
   return (
     <DashboardLayout role="student" title="Browse Courses">
       {/* Search Bar */}
-      <GlassCard className="p-6 mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <Search className="h-5 w-5 text-gray-400" />
+      <GlassCard className="p-6 mb-8 bg-white/5 border border-white/10">
+        <div className="flex items-center gap-3 mb-4 rounded-full bg-white/8 px-4 py-3 border border-white/20 focus-within:ring-2 focus-within:ring-blue-500/80 focus-within:bg-white/12 focus-within:border-blue-400/50 transition-all duration-200 hover:bg-white/10">
+          <Search className="h-5 w-5 text-gray-300" />
           <input
             type="text"
             placeholder="Search courses by title or topic..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            className="flex-1 bg-transparent border-none px-1 text-white placeholder-gray-400 text-sm font-medium outline-none caret-blue-400"
           />
         </div>
 
@@ -110,7 +112,7 @@ export default function StudentCoursesListPage() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+              className="w-full bg-white/8 border border-white/20 rounded-lg px-4 py-2.5 text-sm text-white focus:border-blue-400/50 focus:ring-2 focus:ring-blue-500/60 outline-none transition-all duration-200 hover:bg-white/10 cursor-pointer"
             >
               <option value="">All Categories</option>
               {categories.map((cat) => (
@@ -129,7 +131,7 @@ export default function StudentCoursesListPage() {
             <select
               value={selectedLevel}
               onChange={(e) => setSelectedLevel(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+              className="w-full bg-white/8 border border-white/20 rounded-lg px-4 py-2.5 text-sm text-white focus:border-blue-400/50 focus:ring-2 focus:ring-blue-500/60 outline-none transition-all duration-200 hover:bg-white/10 cursor-pointer"
             >
               <option value="">All Levels</option>
               {levels.map((level) => (
