@@ -15,9 +15,8 @@ dist-ssr
 .env.*
 !.env.example
 
-# SQL and Markdown files
+# SQL files
 *.sql
-*.md
 
 # Editor directories and files
 .vscode/*

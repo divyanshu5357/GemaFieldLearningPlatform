@@ -67,17 +67,22 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
 
   // Desktop sidebar
   const desktopSidebar = (
-    <div className="hidden md:flex h-screen w-48 lg:w-64 flex-col border-r border-white/10 bg-[#0b1736] text-white">
-      <div className="flex h-14 lg:h-16 items-center px-3 lg:px-6 border-b border-white/10">
-        <GraduationCap className="h-6 lg:h-8 w-6 lg:w-8 text-blue-500 shrink-0" />
-        <span className="text-sm lg:text-xl font-bold tracking-tight ml-2 hidden lg:block">LearnHub</span>
-        <span className="text-xs lg:text-lg font-bold tracking-tight ml-1 lg:hidden">LH</span>
+  <div className="hidden md:flex h-screen w-52 lg:w-64 flex-col border-r border-white/10 bg-linear-to-b from-[#050b1f] via-[#050b1f] to-[#020617] text-white shadow-[0_0_35px_rgba(15,23,42,0.8)]">
+      <div className="flex h-14 lg:h-16 items-center px-3 lg:px-6 border-b border-white/10 bg-[#050b1f]/80 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-tr from-blue-500 to-purple-500 shadow-lg shadow-blue-500/40">
+            <GraduationCap className="h-5 lg:h-6 w-5 lg:w-6 text-white" />
+          </div>
+          <span className="text-sm lg:text-xl font-bold tracking-tight ml-1 hidden lg:block">LearnHub</span>
+          <span className="text-xs lg:text-lg font-bold tracking-tight ml-1 lg:hidden">LH</span>
+        </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto py-4">
-        <nav className="space-y-1 px-2">
+      <div className="flex-1 overflow-y-auto py-5">
+        <nav className="space-y-1.5 px-3">
           {links.map((link) => {
-            const isActive = location.pathname === link.path;
+            // Treat link as active for any deeper route under the same base path
+            const isActive = location.pathname.startsWith(link.path);
             const Icon = link.icon;
             
             return (
@@ -85,29 +90,35 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 lg:px-4 py-2 lg:py-3 text-xs lg:text-sm font-medium transition-colors whitespace-nowrap lg:whitespace-normal",
+                  "group relative flex items-center gap-3 rounded-xl px-3 lg:px-4 py-2.5 lg:py-3 text-xs lg:text-sm font-medium whitespace-nowrap lg:whitespace-normal transition-all duration-200",
                   isActive 
-                    ? "bg-blue-600/20 text-blue-400" 
-                    : "text-gray-400 hover:bg-white/5 hover:text-white"
+                    ? "bg-linear-to-r from-blue-600 to-purple-600 text-white shadow-[0_8px_30px_rgba(59,130,246,0.45)] border border-blue-500/30" 
+                    : "text-gray-400 hover:text-white hover:bg-white/5 hover:shadow-[0_0_18px_rgba(59,130,246,0.25)]"
                 )}
                 title={link.name}
               >
-                <Icon className="h-4 lg:h-5 w-4 lg:w-5 shrink-0" />
-                <span className="hidden lg:inline">{link.name}</span>
+                <span
+                  className={cn(
+                    "absolute left-0 h-9 w-2.5 rounded-full bg-linear-to-b from-blue-300 to-purple-300 opacity-0 scale-y-0 origin-center transition-all duration-200 group-hover:opacity-100 group-hover:scale-y-100",
+                    isActive && "opacity-100 scale-y-100 shadow-lg shadow-blue-400/60"
+                  )}
+                />
+                <Icon className={cn("h-4 lg:h-5 w-4 lg:w-5 shrink-0 transition-all duration-200 group-hover:scale-110", isActive && "scale-110 text-white")} />
+                <span className={cn("hidden lg:inline transition-all duration-200", isActive && "font-semibold text-white")}>{link.name}</span>
               </Link>
             );
           })}
         </nav>
       </div>
 
-      <div className="border-t border-white/10 p-2 lg:p-4">
+      <div className="border-t border-white/10 p-2 lg:p-4 bg-[#020617]/80">
         <button 
           onClick={handleSignOut}
           disabled={isSigningOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 lg:px-4 py-2 lg:py-3 text-xs lg:text-sm font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-50 whitespace-nowrap lg:whitespace-normal"
+          className="group flex w-full items-center gap-3 rounded-xl px-3 lg:px-4 py-2.5 lg:py-3 text-xs lg:text-sm font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-all duration-200 disabled:opacity-50 whitespace-nowrap lg:whitespace-normal"
           title="Sign Out"
         >
-          <LogOut className="h-4 lg:h-5 w-4 lg:w-5 shrink-0" />
+          <LogOut className="h-4 lg:h-5 w-4 lg:w-5 shrink-0 transition-transform duration-200 group-hover:scale-110" />
           <span className="hidden lg:inline">{isSigningOut ? "Signing Out..." : "Sign Out"}</span>
         </button>
       </div>

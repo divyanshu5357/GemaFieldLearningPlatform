@@ -169,11 +169,11 @@ export default function AdminDashboard() {
               <BarChart3 className="h-4 w-4" />
               View Analytics
             </button>
-            <GlassCard className="flex items-center px-3 py-2 text-sm text-gray-400 bg-white/5 border-white/10 rounded-lg w-64">
-              <Search className="h-4 w-4 mr-2" />
+            <GlassCard className="flex items-center px-4 py-2 text-sm text-gray-300 bg-white/8 border border-white/20 rounded-full w-56 lg:w-64 focus-within:ring-2 focus-within:ring-blue-500/80 focus-within:bg-white/12 focus-within:border-blue-400/50 transition-all duration-200 hover:bg-white/10">
+              <Search className="h-4 w-4 mr-2 text-gray-400" />
               <input 
                 placeholder="Search users..." 
-                className="bg-transparent border-none outline-none text-white w-full placeholder-gray-500"
+                className="bg-transparent border-none outline-none text-white w-full placeholder-gray-400 text-sm font-medium caret-blue-400"
               />
             </GlassCard>
             <button 
