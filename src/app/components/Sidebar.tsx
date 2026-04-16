@@ -81,7 +81,8 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
       <div className="flex-1 overflow-y-auto py-5">
         <nav className="space-y-1.5 px-3">
           {links.map((link) => {
-            const isActive = location.pathname === link.path;
+            // Treat link as active for any deeper route under the same base path
+            const isActive = location.pathname.startsWith(link.path);
             const Icon = link.icon;
             
             return (
@@ -91,19 +92,19 @@ export function Sidebar({ role, mobileOpen = false, onMobileClose }: SidebarProp
                 className={cn(
                   "group relative flex items-center gap-3 rounded-xl px-3 lg:px-4 py-2.5 lg:py-3 text-xs lg:text-sm font-medium whitespace-nowrap lg:whitespace-normal transition-all duration-200",
                   isActive 
-                    ? "bg-linear-to-r from-blue-600 to-purple-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.6)] border border-blue-400/40" 
-                    : "text-gray-400 hover:text-white hover:bg-white/5 hover:shadow-[0_0_18px_rgba(59,130,246,0.35)]"
+                    ? "bg-linear-to-r from-blue-600 to-purple-600 text-white shadow-[0_8px_30px_rgba(59,130,246,0.45)] border border-blue-500/30" 
+                    : "text-gray-400 hover:text-white hover:bg-white/5 hover:shadow-[0_0_18px_rgba(59,130,246,0.25)]"
                 )}
                 title={link.name}
               >
                 <span
                   className={cn(
-                    "absolute left-0 h-8 w-1.5 rounded-full bg-linear-to-b from-blue-300 to-purple-300 opacity-0 scale-y-0 origin-center transition-all duration-200 group-hover:opacity-100 group-hover:scale-y-100",
+                    "absolute left-0 h-9 w-2.5 rounded-full bg-linear-to-b from-blue-300 to-purple-300 opacity-0 scale-y-0 origin-center transition-all duration-200 group-hover:opacity-100 group-hover:scale-y-100",
                     isActive && "opacity-100 scale-y-100 shadow-lg shadow-blue-400/60"
                   )}
                 />
-                <Icon className={cn("h-4 lg:h-5 w-4 lg:w-5 shrink-0 transition-all duration-200 group-hover:scale-110", isActive && "scale-110")} />
-                <span className={cn("hidden lg:inline transition-all duration-200", isActive && "font-bold")}>{link.name}</span>
+                <Icon className={cn("h-4 lg:h-5 w-4 lg:w-5 shrink-0 transition-all duration-200 group-hover:scale-110", isActive && "scale-110 text-white")} />
+                <span className={cn("hidden lg:inline transition-all duration-200", isActive && "font-semibold text-white")}>{link.name}</span>
               </Link>
             );
           })}
