@@ -85,6 +85,28 @@ textarea {
   border: 1px solid var(--border);
 }
 
+/* Remove autofill background color from inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px transparent inset !important;
+  box-shadow: 0 0 0 30px transparent inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+/* Remove autofill border */
+input:-webkit-autofill {
+  -webkit-border-radius: 0;
+  border-radius: 0;
+}
+
+/* Transparent background for search inputs */
+input[placeholder*="Search"],
+input[placeholder*="search"] {
+  background-color: transparent !important;
+}
+
 button {
   background-color: var(--primary);
   color: var(--primary-foreground);

@@ -8,8 +8,9 @@ import LessonList from "../components/LessonList";
 import AIRevisionCard from "../components/AIRevisionCard";
 import { ChatPanelContent } from "../components/ChatPanelContent";
 import ChallengeRenderer from "../components/ChallengeRenderer";
-import { ArrowLeft, ChevronLeft, ChevronRight, Zap } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Zap, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Course {
   id: string;
@@ -49,8 +50,9 @@ export default function StudentCoursePage() {
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [studentId, setStudentId] = useState<string | null>(null);
-  const [chatOpen, setChatOpen] = useState(true);
-  const [chatWidth, setChatWidth] = useState(200); // Small default size
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatWidth, setChatWidth] = useState(200);
+  const [showRevisionModal, setShowRevisionModal] = useState(false); // Separate state for revision modal
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -107,23 +109,36 @@ export default function StudentCoursePage() {
     if (courseId) fetchCourseData();
   }, [courseId, navigate]);
 
-  // Fetch challenges for selected lesson
+  // Fetch challenges for selected lesson (or all course challenges if no lesson specific)
   useEffect(() => {
     const fetchLessonChallenges = async () => {
-      if (!selectedLessonId || !courseId) {
+      if (!courseId) {
         setChallenges([]);
         setSelectedChallengeId(null);
         return;
       }
 
       try {
-        const { data: challengesData } = await supabase
+        // Fetch challenges for this course (regardless of lesson)
+        // If lesson_id is null, it will include course-level challenges
+        let query = supabase
           .from("learning_challenges")
           .select("*")
           .eq("course_id", courseId)
-          .eq("lesson_id", selectedLessonId)
           .eq("is_published", true)
           .order("display_order", { ascending: true });
+
+        // If a lesson is selected, also show that lesson's challenges
+        if (selectedLessonId) {
+          query = supabase
+            .from("learning_challenges")
+            .select("*")
+            .eq("course_id", courseId)
+            .eq("is_published", true)
+            .order("display_order", { ascending: true });
+        }
+
+        const { data: challengesData } = await query;
 
         if (challengesData) {
           setChallenges(challengesData);
@@ -162,199 +177,328 @@ export default function StudentCoursePage() {
 
   return (
     <DashboardLayout role="student" title={course.title}>
-      {/* Back Button */}
-      <button
-        onClick={() => navigate("/courses")}
-        className="flex items-center gap-2 text-blue-300 hover:text-blue-200 mb-8 transition-colors font-semibold text-base"
-      >
-        <ArrowLeft className="h-5 w-5" />
-        Back to Courses
-      </button>
+      <div className="w-full space-y-6 pb-20">
+        {/* Back Button */}
+        <motion.button
+          onClick={() => navigate("/courses")}
+          className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors font-medium text-sm"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+          whileHover={{ x: -5 }}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Courses
+        </motion.button>
 
-      {/* Course Header */}
-      <GlassCard className="mb-8 p-8 border-l-4 border-blue-500 bg-linear-to-r from-blue-500/5 to-purple-500/5">
-        <h1 className="text-4xl font-bold text-white mb-3 drop-shadow-lg">{course.title}</h1>
-        <p className="text-gray-200 text-lg mb-4 leading-relaxed">{course.description}</p>
-        <div className="flex gap-4 text-sm">
-          <span className="px-4 py-2 bg-blue-500/20 border border-blue-400/50 rounded-full font-semibold text-blue-200">
-            📚 {lessons.length} lesson{lessons.length !== 1 ? "s" : ""}
-          </span>
-        </div>
-      </GlassCard>
+        {/* Course Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <GlassCard className="p-8 border-l-4 border-blue-500 bg-linear-to-r from-blue-500/5 to-purple-500/5">
+            <h1 className="text-4xl font-bold text-white mb-3 drop-shadow-lg">{course.title}</h1>
+            <p className="text-gray-200 text-lg mb-4 leading-relaxed">{course.description}</p>
+            <motion.div 
+              className="flex gap-4 text-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <span className="px-4 py-2 bg-blue-500/20 border border-blue-400/50 rounded-full font-semibold text-blue-200">
+                📚 {lessons.length} lesson{lessons.length !== 1 ? "s" : ""}
+              </span>
+            </motion.div>
+          </GlassCard>
+        </motion.div>
 
-      {/* Video Player + Playlist Layout */}
-      {lessons.length === 0 ? (
-        <GlassCard className="p-12 text-center border border-yellow-500/20">
-          <p className="text-gray-300 text-lg font-semibold">No lessons yet. Check back soon!</p>
-        </GlassCard>
-      ) : (
-        <div className="flex gap-4 w-full">
-          {/* Left Side - Video, Revision, and Lessons */}
-          <div className="flex-1 flex flex-col gap-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
-            {/* Video Player Card */}
-            <div className="shrink-0">
-              <GlassCard className="p-8 border-t-2 border-blue-500 bg-linear-to-b from-blue-500/5 to-transparent">
+        {/* No Lessons Message */}
+        {lessons.length === 0 ? (
+          <GlassCard className="p-12 text-center border border-yellow-500/20">
+            <p className="text-gray-300 text-lg font-semibold">No lessons yet. Check back soon!</p>
+          </GlassCard>
+        ) : (
+          <>
+            {/* Video Player - Full Width, Fixed Height */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <GlassCard className="p-6 border-t-2 border-blue-500 bg-linear-to-b from-blue-500/5 to-transparent">
                 {selectedLesson ? (
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 drop-shadow-md">
+                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3 drop-shadow-md">
                       <span className="w-1.5 h-6 bg-linear-to-b from-blue-400 to-blue-600 rounded-full"></span>
                       {selectedLesson.title}
                     </h2>
-                    <VideoPlayer
-                      youtubeUrl={selectedLesson.youtube_url}
-                      title={selectedLesson.title}
-                    />
+                    {/* Video container with fixed aspect ratio */}
+                    <div className="w-full rounded-lg overflow-hidden bg-black/20">
+                      <div style={{ aspectRatio: '16/9', overflow: 'hidden' }}>
+                        <VideoPlayer
+                          youtubeUrl={selectedLesson.youtube_url}
+                          title={selectedLesson.title}
+                        />
+                      </div>
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-center text-gray-300 py-16">
+                  <div className="text-center text-gray-300 py-12">
                     <p className="text-lg font-semibold">Select a lesson to watch</p>
                   </div>
                 )}
               </GlassCard>
-            </div>
+            </motion.div>
 
-            {/* Revision Card - Full Width, Scrollable */}
-            {selectedLesson && (
-              <div className="shrink-0">
-                <GlassCard className="p-6 border-t-2 border-purple-500 bg-linear-to-b from-purple-500/5 to-transparent max-h-96 overflow-y-auto">
-                  <AIRevisionCard
-                    lessonTitle={selectedLesson.title}
-                    description={course.description}
-                    transcript={selectedLesson.youtube_url}
-                  />
-                </GlassCard>
-              </div>
-            )}
+            {/* Revision Notes + Challenges - Side by Side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Revision Notes Button */}
+              {selectedLesson && (
+                <motion.button
+                  onClick={() => setShowRevisionModal(true)}
+                  className="p-6 rounded-2xl border-2 border-purple-400/50 bg-linear-to-r from-purple-500/10 to-indigo-500/10 hover:from-purple-500/20 hover:to-indigo-500/20 transition-all duration-300 transform hover:scale-105 active:scale-95 text-left group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-purple-500/20 rounded-lg group-hover:bg-purple-500/40 transition-colors">
+                        <BookOpen className="text-purple-300 h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="text-white font-bold text-base">AI Revision Notes</p>
+                        <p className="text-gray-300 text-sm">Generate study notes</p>
+                      </div>
+                    </div>
+                    <span className="text-purple-300 group-hover:translate-x-2 transition-transform">→</span>
+                  </div>
+                </motion.button>
+              )}
+
+              {/* Challenges Count Card */}
+              {challenges.length > 0 && (
+                <motion.div
+                  className="p-6 rounded-2xl border-2 border-yellow-400/50 bg-linear-to-r from-yellow-500/10 to-orange-500/10"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.25 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-yellow-500/20 rounded-lg">
+                      <Zap className="text-yellow-300 h-6 w-6" />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-base">{challenges.length} Learning Challenges</p>
+                      <p className="text-gray-300 text-sm">Practice and earn XP</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
 
             {/* Challenges Section */}
             {challenges.length > 0 && (
-              <div className="shrink-0">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
                 <GlassCard className="p-6 border-t-2 border-yellow-500 bg-linear-to-b from-yellow-500/5 to-transparent">
-                  <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 drop-shadow-md">
+                  <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2 drop-shadow-md">
                     <Zap className="text-yellow-400" size={20} />
-                    Learning Challenges
+                    Select a Challenge
                   </h3>
                   
-                  {/* Challenge Tabs */}
-                  <div className="space-y-4">
-                    {challenges.length > 0 && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-                        {challenges.map((challenge) => (
-                          <button
-                            key={challenge.id}
-                            onClick={() => setSelectedChallengeId(challenge.id)}
-                            className={`p-3 rounded-lg text-left transition-all border-2 ${
-                              selectedChallengeId === challenge.id
-                                ? 'border-yellow-400 bg-yellow-500/10'
-                                : 'border-gray-600 bg-gray-800/30 hover:border-yellow-300'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-semibold text-white text-sm">{challenge.title}</p>
-                                <p className="text-xs text-gray-300 capitalize">
-                                  {challenge.challenge_type.replace('_', ' ')}
-                                </p>
-                              </div>
-                              <span className="text-yellow-400 font-bold text-sm">{challenge.xp_reward} XP</span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                  {/* Challenge Buttons Grid */}
+                  <motion.div 
+                    className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4"
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: {
+                        opacity: 1,
+                        transition: {
+                          staggerChildren: 0.08,
+                        },
+                      },
+                    }}
+                  >
+                    {challenges.map((challenge) => (
+                      <motion.button
+                        key={challenge.id}
+                        onClick={() => setSelectedChallengeId(challenge.id)}
+                        className={`p-3 rounded-lg text-left transition-all border-2 ${
+                          selectedChallengeId === challenge.id
+                            ? 'border-yellow-400 bg-yellow-500/15'
+                            : 'border-yellow-400/30 bg-yellow-500/5 hover:border-yellow-400 hover:bg-yellow-500/10'
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        variants={{
+                          hidden: { opacity: 0, y: 10 },
+                          visible: { opacity: 1, y: 0 },
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-white text-sm">{challenge.title}</p>
+                            <p className="text-xs text-gray-300 capitalize">
+                              {challenge.challenge_type.replace(/_/g, ' ')}
+                            </p>
+                          </div>
+                          <span className="text-yellow-400 font-bold text-sm">{challenge.xp_reward} XP</span>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </motion.div>
 
-                    {/* Selected Challenge Renderer */}
+                  {/* Selected Challenge Renderer */}
+                  <AnimatePresence>
                     {selectedChallengeId && (
-                      <div className="mt-6 p-4 bg-black/20 rounded-lg">
+                      <motion.div 
+                        className="mt-4 p-4 bg-yellow-500/5 border border-yellow-400/30 rounded-lg"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
                         <ChallengeRenderer 
                           challengeId={selectedChallengeId}
                           onComplete={(xp, badges) => {
                             console.log(`Challenge completed! +${xp} XP, Badges: ${badges.join(', ')}`);
                           }}
                         />
-                      </div>
+                      </motion.div>
                     )}
-                  </div>
+                  </AnimatePresence>
                 </GlassCard>
-              </div>
+              </motion.div>
             )}
 
-            {/* Lesson List */}
-            <div className="shrink-0">
-              <GlassCard className="p-8 border-t-2 border-purple-500 max-h-96 overflow-y-auto bg-linear-to-b from-purple-500/5 to-transparent">
-                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 drop-shadow-md">
+            {/* Lessons Playlist */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.35 }}
+            >
+              <GlassCard className="p-6 border-t-2 border-purple-500 bg-linear-to-b from-purple-500/5 to-transparent">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2 drop-shadow-md">
                   <span className="w-2 h-2 bg-linear-to-r from-purple-400 to-purple-600 rounded-full"></span>
                   Lessons Playlist
                 </h3>
-                <LessonList
-                  lessons={lessons}
-                  selectedLessonId={selectedLessonId || undefined}
-                  onSelectLesson={setSelectedLessonId}
-                  onDeleteLesson={async () => {}} // Students don't delete lessons
-                  isTeacher={false}
-                />
-              </GlassCard>
-            </div>
-          </div>
-
-          {/* Right Side - Chat Panel with Resize */}
-          <div 
-            className="shrink-0 bg-linear-to-br from-slate-900/95 to-slate-800/95 rounded-2xl border border-white/10 backdrop-blur-xl flex flex-col overflow-hidden relative min-h-96"
-            style={{ width: `${chatWidth}px` }}
-          >
-            {/* Chat Header */}
-            <div className="p-3 border-b border-white/10 flex items-center justify-between bg-white/5">
-              <h2 className="text-white font-semibold flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
-                <span className="text-lg">💬</span>
-                <span>AI Mentor</span>
-              </h2>
-              <button
-                onClick={() => setChatOpen(!chatOpen)}
-                className="text-gray-400 hover:text-white transition-colors p-1"
-                title={chatOpen ? "Minimize" : "Expand"}
-              >
-                {chatOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-              </button>
-            </div>
-
-            {/* Chat Component - Takes full remaining space */}
-            {chatOpen && selectedLesson && (
-              <div className="flex-1 overflow-hidden">
-                <div className="h-full">
-                  <ChatPanelContent 
-                    lesson={selectedLesson} 
-                    studentId={studentId} 
-                    courseTitle={course.title} 
+                <div className="max-h-64 overflow-y-auto">
+                  <LessonList
+                    lessons={lessons}
+                    selectedLessonId={selectedLessonId || undefined}
+                    onSelectLesson={setSelectedLessonId}
+                    onDeleteLesson={async () => {}}
+                    isTeacher={false}
                   />
                 </div>
-              </div>
+              </GlassCard>
+            </motion.div>
+
+            {/* AI Mentor Chat - Bottom Expandable */}
+            {selectedLesson && (
+              <motion.div
+                className="fixed bottom-0 left-0 right-0 md:static"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <div className="bg-linear-to-br from-slate-900/95 to-slate-800/95 rounded-t-2xl md:rounded-2xl border border-white/10 backdrop-blur-xl overflow-hidden md:mb-0 mb-0">
+                  {/* Chat Header - Clickable to expand/collapse */}
+                  <button
+                    onClick={() => setChatOpen(!chatOpen)}
+                    className="w-full p-4 flex items-center justify-between bg-linear-to-r from-slate-800/50 to-slate-900/50 hover:from-slate-800 hover:to-slate-900 transition-all border-b border-white/10"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">💬</span>
+                      <h2 className="text-white font-semibold">AI Mentor</h2>
+                      <span className="text-xs text-gray-400">{chatOpen ? 'Open' : 'Closed'}</span>
+                    </div>
+                    <motion.div
+                      animate={{ rotate: chatOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronUp className="h-5 w-5 text-gray-300" />
+                    </motion.div>
+                  </button>
+
+                  {/* Chat Content */}
+                  <AnimatePresence>
+                    {chatOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="md:max-h-96 max-h-80 overflow-hidden"
+                      >
+                        <ChatPanelContent 
+                          lesson={selectedLesson} 
+                          studentId={studentId} 
+                          courseTitle={course.title} 
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
             )}
+          </>
+        )}
 
-            {/* Resize Handle */}
-            <div
-              className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500/50 bg-transparent group transition-colors"
-              onMouseDown={(e) => {
-                const startX = e.clientX;
-                const startWidth = chatWidth;
+        {/* Revision Notes Modal */}
+        <AnimatePresence>
+          {showRevisionModal && selectedLesson && (
+            <motion.div 
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowRevisionModal(false)}
+            >
+              <motion.div 
+                className="bg-linear-to-br from-slate-900 to-slate-800 rounded-2xl border border-purple-500/50 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="sticky top-0 bg-linear-to-r from-purple-500/10 to-indigo-500/10 border-b border-purple-500/30 p-6 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <BookOpen className="text-purple-300 h-6 w-6" />
+                    <div>
+                      <h3 className="text-white font-bold text-xl">Revision Notes</h3>
+                      <p className="text-gray-300 text-sm">{selectedLesson.title}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowRevisionModal(false)}
+                    className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+                  >
+                    ✕
+                  </button>
+                </div>
 
-                const handleMouseMove = (moveEvent: MouseEvent) => {
-                  const diff = moveEvent.clientX - startX;
-                  const newWidth = Math.max(150, Math.min(600, startWidth - diff));
-                  setChatWidth(newWidth);
-                };
-
-                const handleMouseUp = () => {
-                  document.removeEventListener("mousemove", handleMouseMove);
-                  document.removeEventListener("mouseup", handleMouseUp);
-                };
-
-                document.addEventListener("mousemove", handleMouseMove);
-                document.addEventListener("mouseup", handleMouseUp);
-              }}
-            />
-          </div>
-        </div>
-      )}
+                {/* Modal Content */}
+                <div className="p-6">
+                  <AIRevisionCard
+                    lessonTitle={selectedLesson.title}
+                    description={course.description}
+                    transcript={selectedLesson.youtube_url}
+                  />
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </DashboardLayout>
   );
 }

@@ -4,6 +4,7 @@ import { GlassCard } from "./GlassCard";
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import NotificationPanel from "./NotificationPanel";
+import { useNavigate } from "react-router";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,8 @@ export function DashboardLayout({ children, role, title }: DashboardLayoutProps)
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [demoTimeRemaining, setDemoTimeRemaining] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getUser = async () => {
@@ -27,6 +30,41 @@ export function DashboardLayout({ children, role, title }: DashboardLayoutProps)
     getUser();
   }, []);
 
+  useEffect(() => {
+    // Check for demo session
+    const demoSessionStr = localStorage.getItem("demoSession");
+    if (demoSessionStr) {
+      const demoSession = JSON.parse(demoSessionStr);
+      const timeRemaining = Math.max(0, demoSession.expiresAt - Date.now());
+      
+      if (timeRemaining <= 0) {
+        localStorage.removeItem("demoSession");
+        localStorage.removeItem("demoTimeoutId");
+        navigate("/login");
+      } else {
+        setDemoTimeRemaining(timeRemaining);
+      }
+    }
+
+    const interval = setInterval(() => {
+      const demoSessionStr = localStorage.getItem("demoSession");
+      if (demoSessionStr) {
+        const demoSession = JSON.parse(demoSessionStr);
+        const timeRemaining = Math.max(0, demoSession.expiresAt - Date.now());
+        
+        if (timeRemaining <= 0) {
+          localStorage.removeItem("demoSession");
+          localStorage.removeItem("demoTimeoutId");
+          navigate("/login");
+        } else {
+          setDemoTimeRemaining(timeRemaining);
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [navigate]);
+
   return (
     <div className="flex h-screen w-full bg-[#0b1736] text-white overflow-hidden flex-col md:flex-row">
       {/* Sidebar */}
@@ -36,11 +74,18 @@ export function DashboardLayout({ children, role, title }: DashboardLayoutProps)
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
         <header className="flex h-14 md:h-16 items-center justify-between border-b border-white/10 bg-[#0b1736]/95 px-4 md:px-8 backdrop-blur-sm sticky top-0 z-10 gap-2 md:gap-4">
-          <div className="text-lg md:text-xl font-semibold text-white/90 truncate">{title || "Dashboard"}</div>
+          <div className="flex items-center gap-3 flex-1">
+            <div className="text-lg md:text-xl font-semibold text-white/90 truncate">{title || "Dashboard"}</div>
+            {demoTimeRemaining !== null && (
+              <div className="px-3 py-1 rounded-full bg-pink-500/20 border border-pink-500/50 text-xs text-pink-300">
+                Demo • {Math.floor(demoTimeRemaining / 60000)}:{String(Math.floor((demoTimeRemaining % 60000) / 1000)).padStart(2, '0')}
+              </div>
+            )}
+          </div>
           
           <div className="flex items-center gap-2 md:gap-3 shrink-0">
-            <GlassCard className="hidden sm:flex items-center px-3 py-1.5 text-sm text-gray-300 bg-white/8 border border-white/20 rounded-full sm:w-52 md:w-64 lg:w-72 focus-within:ring-2 focus-within:ring-blue-500/80 focus-within:bg-white/12 focus-within:border-blue-400/50 transition-all duration-200 hover:bg-white/10 hover:border-white/30">
-              <Search className="h-4 w-4 mr-2 shrink-0 text-gray-400" />
+            <GlassCard className="hidden sm:flex items-center px-3 py-1.5 text-sm text-gray-300 bg-white/5 border-none rounded-full sm:w-52 md:w-64 lg:w-72 focus-within:ring-2 focus-within:ring-blue-500/80 focus-within:bg-white/8 transition-all duration-200 hover:bg-white/6">
+              <Search className="h-4 w-4 mr-2 shrink-0 text-gray-300" />
               <input 
                 placeholder="Search..." 
                 className="bg-transparent border-none outline-none text-white w-full placeholder-gray-400 text-sm font-medium caret-blue-400"
