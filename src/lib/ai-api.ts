@@ -1,7 +1,6 @@
 import { supabase } from "../lib/supabase";
 
-
-const GEMINI_API_KEY = "AIzaSyCvOojkR3Jw7hvV098pHn3guPawX0QweEs";
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 
 async function callGemini(
