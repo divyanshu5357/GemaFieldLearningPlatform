@@ -1,15 +1,14 @@
   import { GlassCard } from "../components/GlassCard";
 import { useNavigate } from "react-router";
 import { useState } from "react";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, Home } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,15 +48,42 @@ export default function LoginPage() {
     else if (profile?.role === "admin")
       navigate("/dashboard/admin");
 
-    setLoading(false);
+    setLoading(false);
 
-  };
+  };
 
+  const handleDemoLogin = () => {
+    const demoSession = {
+      id: "demo-user-" + Date.now(),
+      email: "demo@learnhub.com",
+      role: "student",
+      expiresAt: Date.now() + 5 * 60 * 1000,
+      isDemo: true,
+    };
+    localStorage.setItem("demoSession", JSON.stringify(demoSession));
+    const timeoutId = setTimeout(() => {
+      localStorage.removeItem("demoSession");
+      navigate("/login");
+    }, 5 * 60 * 1000);
+    localStorage.setItem("demoTimeoutId", timeoutId.toString());
+    navigate("/dashboard/student");
+  };
 
-
-  return (
-
-<div className="h-screen flex items-center justify-center bg-linear-to-br from-[#0f172a] to-[#020617]">
+  return (<motion.div 
+  className="h-screen flex items-center justify-center bg-linear-to-br from-[#0f172a] to-[#020617] relative"
+  initial={{ y: -100, opacity: 0 }}
+  animate={{ y: 0, opacity: 1 }}
+  transition={{ duration: 0.6, ease: "easeOut" }}
+>
+  {/* HOME BUTTON */}
+  <motion.button
+    onClick={() => navigate("/")}
+    className="absolute top-8 left-8 p-3 rounded-full bg-white/10 border border-white/20 text-gray-300 hover:text-white transition"
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+  >
+    <Home size={24} />
+  </motion.button>
 
 <GlassCard className="
 w-225
@@ -67,9 +93,7 @@ overflow-hidden
 rounded-2xl
 border border-cyan-400/30
 shadow-[0_0_60px_rgba(0,255,255,0.25)]
-">
-
-{/* LEFT SIDE */}
+">{/* LEFT SIDE */}
 
 <div className="
 w-1/2
@@ -192,6 +216,39 @@ transition
 
 </button>
 
+{/* DEMO BUTTON */}
+
+<button
+
+type="button"
+
+onClick={handleDemoLogin}
+
+className="
+w-full
+mt-3
+py-3
+rounded-full
+bg-linear-to-r
+from-pink-500
+to-purple-500
+text-white
+font-medium
+hover:scale-[1.03]
+hover:shadow-lg
+transition
+"
+
+>
+
+Try Demo
+
+</button>
+
+<p className="text-center text-xs text-gray-400 mt-2">
+Demo access Try Demo Account
+</p>
+
 
 {error &&
 
@@ -280,7 +337,7 @@ BACK!
 
 </GlassCard>
 
-</div>
+</motion.div>
 
 );
 

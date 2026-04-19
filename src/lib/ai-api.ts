@@ -1,49 +1,52 @@
 import { supabase } from "../lib/supabase";
 
-// Get API keys from environment
-const GROQ_API_KEY = (import.meta as any).env.VITE_GROQ_API_KEY;
 
-/**
- * Call Groq API directly from frontend (Free & Unlimited!)
- */
-async function callGroq(
+const GEMINI_API_KEY = "AIzaSyCvOojkR3Jw7hvV098pHn3guPawX0QweEs";
+
+
+async function callGemini(
   prompt: string,
   systemPrompt?: string
 ): Promise<string> {
-  if (!GROQ_API_KEY) {
-    throw new Error("Groq API key not configured");
+  if (!GEMINI_API_KEY) {
+    throw new Error("Gemini API key not configured");
   }
 
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${GROQ_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "llama-3.1-8b-instant",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt || "You are a helpful assistant.",
+  const response = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY,
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1024,
         },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 1024,
-    }),
-  });
+      }),
+    }
+  );
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(`Groq API error: ${error.error?.message || "Unknown error"}`);
+    throw new Error(
+      `Gemini API error: ${error.error?.message || "Unknown error"}`
+    );
   }
 
   const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 }
 
 /**
@@ -75,8 +78,8 @@ export async function generateRevisionNotes(
   error?: string;
 }> {
   try {
-    if (!GROQ_API_KEY) {
-      return { error: "Groq API key not configured. Please add VITE_GROQ_API_KEY to your .env file" };
+    if (!GEMINI_API_KEY) {
+      return { error: "Gemini API key not configured" };
     }
 
     const systemPrompt = `You are an expert web development instructor. Create concise, student-friendly revision notes.
@@ -93,9 +96,9 @@ ${transcript ? `Transcript/URL: ${transcript}` : ""}
 
 Create revision notes for this lesson.`;
 
-    console.log('Calling Groq for revision notes...');
-    const response = await callGroq(content, systemPrompt);
-    console.log('Groq Response:', response);
+    console.log('Calling Gemini for revision notes...');
+    const response = await callGemini(content, systemPrompt);
+    console.log('Gemini Response:', response);
     
     const parsed = parseJSONFromText(response);
 
@@ -122,8 +125,8 @@ export async function analyzeStudentPerformance(
   error?: string;
 }> {
   try {
-    if (!GROQ_API_KEY) {
-      return { error: "Groq API key not configured. Please add VITE_GROQ_API_KEY to your .env file" };
+    if (!GEMINI_API_KEY) {
+      return { error: "Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file" };
     }
 
     const systemPrompt = `You are an expert learning analyst. Analyze student performance and provide constructive feedback.
@@ -140,8 +143,8 @@ Format your response as JSON:
 
     const content = `Student test results:\n${resultsText}\n\nProvide personalized improvement advice.`;
 
-    console.log('Calling Groq for performance analysis...');
-    const response = await callGroq(content, systemPrompt);
+    console.log('Calling Gemini for performance analysis...');
+    const response = await callGemini(content, systemPrompt);
     console.log('Performance Analysis Response:', response);
     
     const parsed = parseJSONFromText(response);
@@ -164,8 +167,8 @@ export async function askAIMentor(
   courseTitle?: string
 ): Promise<string> {
   try {
-    if (!GROQ_API_KEY) {
-      throw new Error("Groq API key not configured. Please add VITE_GROQ_API_KEY to your .env file");
+    if (!GEMINI_API_KEY) {
+      throw new Error("Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file");
     }
 
     const systemPrompt = `You are an expert coding mentor helping students understand lesson videos clearly.
@@ -174,8 +177,8 @@ export async function askAIMentor(
 - Focus on the lesson content: ${lessonTitle || "the current lesson"} (from ${courseTitle || "the course"})
 - Ask clarifying questions if the question is unclear`;
 
-    console.log('Calling Groq for mentor chat...');
-    const response = await callGroq(question, systemPrompt);
+    console.log('Calling Gemini for mentor chat...');
+    const response = await callGemini(question, systemPrompt);
     console.log('Mentor Chat Response:', response);
 
     return response.trim();
@@ -202,8 +205,8 @@ export async function analyzeStudentWeakPoints(
   error?: string;
 }> {
   try {
-    if (!GROQ_API_KEY) {
-      return { error: "Groq API key not configured" };
+    if (!GEMINI_API_KEY) {
+      return { error: "Gemini API key not configured" };
     }
 
     const systemPrompt = `You are an expert learning analyst. Analyze student performance and provide constructive feedback.
@@ -226,8 +229,8 @@ Provide analysis in JSON format:
 }
     `.trim();
 
-    console.log("Calling Groq for performance analysis...");
-    const response = await callGroq(content, systemPrompt);
+    console.log("Calling Gemini for performance analysis...");
+    const response = await callGemini(content, systemPrompt);
     console.log("Performance Analysis Response:", response);
 
     const parsed = parseJSONFromText(response);
@@ -357,7 +360,7 @@ export async function fetchChatHistory(
 }
 
 /**
- * Analyze test results using Groq AI to identify strong and weak points
+ * Analyze test results using Gemini AI to identify strong and weak points
  */
 export async function analyzeTestResults(
   questions: any[],
@@ -371,8 +374,8 @@ export async function analyzeTestResults(
   error?: string;
 }> {
   try {
-    if (!GROQ_API_KEY) {
-      return { error: "Groq API key not configured. Please add VITE_GROQ_API_KEY to your .env file" };
+    if (!GEMINI_API_KEY) {
+      return { error: "Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file" };
     }
 
     // Format questions and answers for analysis
@@ -412,8 +415,8 @@ Based on these answers:
 
 Analyze comprehensively, not just individual questions.`;
 
-    console.log("Calling Groq for test analysis...");
-    const response = await callGroq(content, systemPrompt);
+    console.log("Calling Gemini for test analysis...");
+    const response = await callGemini(content, systemPrompt);
     console.log("Test Analysis Response:", response);
 
     const parsed = parseJSONFromText(response);
@@ -438,8 +441,8 @@ export async function generateAIHint(
   content: any
 ): Promise<string> {
   try {
-    if (!GROQ_API_KEY) {
-      throw new Error("Groq API key not configured");
+    if (!GEMINI_API_KEY) {
+      throw new Error("Gemini API key not configured");
     }
 
     const systemPrompt = `You are a helpful learning assistant providing concise hints for educational challenges.
@@ -451,7 +454,7 @@ export async function generateAIHint(
     const prompt = `Provide a helpful hint for a ${challengeType} challenge: ${JSON.stringify(content).substring(0, 500)}`;
 
     console.log("Generating AI hint...");
-    const response = await callGroq(prompt, systemPrompt);
+    const response = await callGemini(prompt, systemPrompt);
     console.log("AI Hint Response:", response);
 
     return response.trim();

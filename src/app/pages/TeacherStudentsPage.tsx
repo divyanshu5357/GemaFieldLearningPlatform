@@ -67,9 +67,9 @@ export default function TeacherStudentsPage() {
         </div>
 
         {/* Search Bar */}
-        <GlassCard className="p-4 bg-white/5 border border-white/10">
-          <div className="flex items-center gap-3 rounded-full bg-white/8 border border-white/20 px-4 py-3 focus-within:ring-2 focus-within:ring-blue-500/80 focus-within:bg-white/12 focus-within:border-blue-400/50 transition-all duration-200 hover:bg-white/10">
-            <Search className="h-5 w-5 text-gray-300" />
+        <GlassCard className="p-4 bg-transparent border-none">
+          <div className="flex items-center gap-3 rounded-full bg-white/5 border-none px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500/80 focus-within:bg-white/8 transition-all duration-200 hover:bg-white/6">
+            <Search className="h-5 w-5 text-gray-300 shrink-0" />
             <input
               type="text"
               placeholder="Search by email or name..."

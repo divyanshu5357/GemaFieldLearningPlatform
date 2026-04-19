@@ -169,8 +169,8 @@ export default function AdminDashboard() {
               <BarChart3 className="h-4 w-4" />
               View Analytics
             </button>
-            <GlassCard className="flex items-center px-4 py-2 text-sm text-gray-300 bg-white/8 border border-white/20 rounded-full w-56 lg:w-64 focus-within:ring-2 focus-within:ring-blue-500/80 focus-within:bg-white/12 focus-within:border-blue-400/50 transition-all duration-200 hover:bg-white/10">
-              <Search className="h-4 w-4 mr-2 text-gray-400" />
+            <GlassCard className="flex items-center px-3 py-1.5 text-sm text-gray-300 bg-white/5 border-none rounded-full w-56 lg:w-64 focus-within:ring-2 focus-within:ring-blue-500/80 focus-within:bg-white/8 transition-all duration-200 hover:bg-white/6">
+              <Search className="h-4 w-4 mr-2 shrink-0 text-gray-300" />
               <input 
                 placeholder="Search users..." 
                 className="bg-transparent border-none outline-none text-white w-full placeholder-gray-400 text-sm font-medium caret-blue-400"

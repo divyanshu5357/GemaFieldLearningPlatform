@@ -1,12 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { GlassCard } from "../components/GlassCard";
 import { BookOpen, Users, Briefcase } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function SignupSelectPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-[#0b1736] p-4 relative overflow-hidden">
+    <motion.div 
+      className="flex h-screen w-full items-center justify-center bg-[#0b1736] p-4 relative overflow-hidden"
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-blue-900/20 via-[#0b1736] to-[#0b1736] pointer-events-none" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
@@ -14,15 +20,25 @@ export default function SignupSelectPage() {
 
       <div className="w-full max-w-2xl relative z-10">
         {/* Header */}
-        <div className="text-center mb-12">
+        <motion.div 
+          className="text-center mb-12"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
           <h1 className="text-4xl font-bold text-white mb-3">Join Us Today</h1>
           <p className="text-lg text-gray-400">
             Select your role to create an account
           </p>
-        </div>
+        </motion.div>
 
         {/* Options Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <motion.div 
+          className="grid md:grid-cols-2 gap-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
           {/* Student Option */}
           <GlassCard
             onClick={() => navigate("/signup/student")}
@@ -60,10 +76,15 @@ export default function SignupSelectPage() {
               </button>
             </div>
           </GlassCard>
-        </div>
+        </motion.div>
 
         {/* Footer */}
-        <div className="text-center mt-8">
+        <motion.div 
+          className="text-center mt-8"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
           <p className="text-gray-400">
             Already have an account?{" "}
             <button
@@ -73,8 +94,8 @@ export default function SignupSelectPage() {
               Login here
             </button>
           </p>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
